@@ -1,9 +1,16 @@
-final int mcVersion = project.mcVersion
+// The release this subproject builds, and the packed `1_21_08`-style number the rest of this file
+// compares against. The preprocessor plugin used to hand both down from the version graph in
+// `build.gradle`; with that gone, the subproject's directory name — which is also its jals
+// `[features]` release — is the single source of truth.
+final String mcRelease = project.name
+final int mcVersion = { ->
+  def parts = mcRelease.tokenize('.').collect { it as int }
+  parts[0] * 10000 + (parts.size() > 1 ? parts[1] : 0) * 100 + (parts.size() > 2 ? parts[2] : 0)
+}()
 final boolean unobfuscated = mcVersion >= 26_00_00
 
 apply plugin: 'maven-publish'
 apply plugin: unobfuscated ? 'net.fabricmc.fabric-loom' : 'net.fabricmc.fabric-loom-remap'
-apply plugin: 'com.replaymod.preprocess'
 
 repositories {
   maven {
@@ -66,6 +73,61 @@ dependencies {
     include("io.github.llamalad7:mixinextras-fabric:${project.mixinextras_version}")
   }
 }
+
+// --- jals -------------------------------------------------------------------------------------
+//
+// `src/main/java` is written in the jals dialect: one source set for every Minecraft version, with
+// `#[cfg(feature = "mc-ge-…")]` where the old preprocessor had `//#if MC >= …`. `jals expand`
+// lowers it to the plain Java this subproject compiles, selecting the release through the
+// `[features]` entry named after this subproject. The lowering is length-preserving, so a line
+// number in a stack trace is still the authored line.
+//
+// The executable is `jals` on PATH unless `-Pjals.executable=…` or `$JALS` names another one; see
+// `docs/jals.md` for how CI installs it.
+
+String jalsExecutable = (project.findProperty('jals.executable') ?: System.getenv('JALS') ?: 'jals').toString()
+File jalsExpanded = layout.buildDirectory.dir('jals/expanded').get().asFile
+
+tasks.register('jalsExpand', Exec) {
+  group = 'build'
+  description = "Lowers the jals dialect sources for Minecraft ${mcRelease}."
+  inputs.dir rootProject.file('src/main/java')
+  inputs.file rootProject.file('jals.toml')
+  inputs.property 'release', mcRelease
+  inputs.property 'executable', jalsExecutable
+  outputs.dir jalsExpanded
+  workingDir rootProject.projectDir
+  executable jalsExecutable
+  args 'expand',
+       '--manifest-path', rootProject.file('jals.toml').absolutePath,
+       '--no-default-features',
+       '--features', mcRelease,
+       '--out-dir', jalsExpanded.absolutePath
+}
+
+// The preprocessor plugin used to redirect these at its own generated tree. A subproject's
+// directory holds only `gradle.properties` and the access widener, so both roots are the root
+// project's — the sources by way of the lowering above.
+sourceSets.main.java.srcDirs = [new File(jalsExpanded, 'src/main/java')]
+sourceSets.main.resources.srcDirs = [rootProject.file('src/main/resources')]
+tasks.named('compileJava') { dependsOn 'jalsExpand' }
+
+// The two jars `jals build` cannot fetch itself: neither carpet nor the Fabric loader is published
+// where jals could pin a digest, so `build.rhai` reads them from `libs/` instead. Gradle has
+// already resolved both — carpet remapped to Mojang names by loom — so this copies them over
+// rather than downloading anything a second time.
+tasks.register('jalsLibs', Copy) {
+  group = 'build'
+  description = 'Copies carpet and the Fabric loader onto the classpath `jals build` reads.'
+  from {
+    sourceSets.main.compileClasspath.filter { file ->
+      file.name.contains('carpet') || file.name.contains('fabric-loader')
+    }
+  }
+  into rootProject.file('libs')
+}
+
+// --- mod packaging ------------------------------------------------------------------------------
 
 String MIXIN_CONFIG_PATH = 'intricarpet.mixins.json'
 JavaVersion JAVA_COMPATIBILITY

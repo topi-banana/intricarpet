@@ -6,6 +6,14 @@ This mod uses Fallen's fabric mod template.
 
 This is a carpet extension that adds mainly stuff useful for TNT tech development.
 
+## Building
+
+One source tree targets every supported Minecraft release. The release switch is
+[jals](https://github.com/topi-banana/jals) build features — `#[cfg(feature = "mc-ge-1.18.2")]`
+where the source preprocessor used to have `//#if MC >= 11800` — so `./gradlew build` needs a `jals`
+executable on `PATH`, and `jals build --no-default-features --features <release>` compiles a release
+without Gradle. See [`docs/jals.md`](docs/jals.md).
+
 ## Features
 - Improved explosion logger, which groups explosions by position: `/log explosions compact`
 - Adds Interactions, which let you disable the interactions between your player and the world, per player.

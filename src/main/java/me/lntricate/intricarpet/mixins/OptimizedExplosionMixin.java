@@ -19,9 +19,11 @@ import net.minecraft.world.phys.Vec3;
 @Mixin(OptimizedExplosion.class)
 public class OptimizedExplosionMixin
 {
-  //#if MC < 260000
+  // Carpet's optimizedTNT helper is gone from 26.1 onwards.
+  #[cfg(not(feature = "mc-ge-26.1.2"))]
   @Unique private static final double SAME_POSITION_VELOCITY = 0.9923437498509884;
 
+  #[cfg(not(feature = "mc-ge-26.1.2"))]
   @Inject(method = "doExplosionA", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getZ()D", ordinal = 1, shift = Shift.BY, by = 3), locals = LocalCapture.CAPTURE_FAILHARD)
   private static void onSamePosition(Explosion e, ExplosionLogHelper eLogger, CallbackInfo ci, ExplosionAccessor eAccess, boolean eventNeeded, float f3, int k1, int l1, int i2, int i1, int j2, int j1, Vec3 vec3d, Entity explodingEntity, int k2, Entity entity)
   {
@@ -31,5 +33,4 @@ public class OptimizedExplosionMixin
       entity.setDeltaMovement(vel.x, vel.y - SAME_POSITION_VELOCITY, vel.z);
     }
   }
-  //#endif
 }

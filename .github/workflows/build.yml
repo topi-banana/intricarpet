@@ -13,6 +13,11 @@ on:
         required: false
         default: ''
 
+env:
+  # The jals revision `jals expand` is taken from. Keep it in step with the `minecraft` dependency
+  # pinned in `jals.toml`.
+  JALS_REV: a46628d6643a6abdcf9e6b82b466fca85b61ffc3
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,6 +40,31 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/gradle.properties', '**/*.accesswidener') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      # `jals expand` lowers the jals dialect sources to the plain Java each subproject compiles —
+      # what the `//#if MC >= …` preprocessor plugin used to do. jals publishes no binaries yet, so
+      # it is built from source once per pinned revision and cached.
+      - name: Cache jals
+        id: cache_jals
+        uses: actions/cache@v6
+        with:
+          path: ~/.cargo/bin/jals
+          key: ${{ runner.os }}-jals-${{ env.JALS_REV }}
+
+      - name: Install jals
+        if: steps.cache_jals.outputs.cache-hit != 'true'
+        run: cargo install --locked --git https://github.com/topi-banana/jals --rev "$JALS_REV" jals-cli
+
+      # Lowering is release-specific, so a `#[cfg]` mistake can be invisible in the release this run
+      # packages. Checking every one costs seconds and needs no Gradle, JDK or network.
+      - name: Check every release lowers
+        run: |
+          for dir in versions/*/; do
+            release="$(basename "$dir")"
+            echo "::group::$release"
+            jals expand --no-default-features --features "$release" --dry-run
+            echo "::endgroup::"
+          done
 
       - name: Get subproject name to build
         id: subproject_info

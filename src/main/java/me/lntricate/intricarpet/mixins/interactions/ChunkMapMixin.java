@@ -16,44 +16,43 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 
-//#if MC >= 12105
-//$$ import net.minecraft.world.phys.Vec3;
-//#endif
+#[cfg(feature = "mc-ge-1.21.5")]
+import net.minecraft.world.phys.Vec3;
 
 @Mixin(ChunkMap.class)
 public class ChunkMapMixin implements IChunkMap
 {
-  //#if MC >= 12105
-  //$$ @Shadow private static double euclideanDistanceSquared(ChunkPos chunkPos, Vec3 vec){return 0.0;}
-  //#else
+  // 1.21.5 takes the position rather than the entity.
+  #[cfg(feature = "mc-ge-1.21.5")]
+  @Shadow private static double euclideanDistanceSquared(ChunkPos chunkPos, Vec3 vec){return 0.0;}
+  #[cfg(not(feature = "mc-ge-1.21.5"))]
   @Shadow private static double euclideanDistanceSquared(ChunkPos chunkPos, Entity entity){return 0.0;}
-  //#endif
   @Shadow @Final private PlayerMap playerMap;
 
   private boolean playerValid(ServerPlayer player, ChunkPos chunkPos, Interaction interaction)
   {
-    //#if MC >= 12105
-    //$$ return ((IServerPlayer)player).getInteraction(interaction) && euclideanDistanceSquared(chunkPos, player.position()) < 16384d;
-    //#else
+    #[cfg(feature = "mc-ge-1.21.5")]
+    return ((IServerPlayer)player).getInteraction(interaction) && euclideanDistanceSquared(chunkPos, player.position()) < 16384d;
+    #[cfg(not(feature = "mc-ge-1.21.5"))]
     return ((IServerPlayer)player).getInteraction(interaction) && euclideanDistanceSquared(chunkPos, player) < 16384d;
-    //#endif
   }
 
   @Override
   public boolean anyPlayerCloseWithInteraction(ChunkPos chunkPos, Interaction interaction)
   {
-    //#if MC >= 11800
-      //#if MC >= 12002
-      //$$ for(ServerPlayer player : playerMap.getAllPlayers())
-      //#else
-      //$$ for(ServerPlayer player : playerMap.getPlayers(chunkPos.toLong()))
-      //#endif
-    //$$   if(playerValid(player, chunkPos, interaction))
-    //$$     return true;
-    //$$ return false;
-    //#else
+    // 1.18 turned the player set into a collection, and 1.20.2 dropped the per-chunk lookup.
+    #[cfg(feature = "mc-ge-1.20.2")]
+    for(ServerPlayer player : playerMap.getAllPlayers())
+      if(playerValid(player, chunkPos, interaction))
+        return true;
+    #[cfg(all(feature = "mc-ge-1.18.2", not(feature = "mc-ge-1.20.2")))]
+    for(ServerPlayer player : playerMap.getPlayers(chunkPos.toLong()))
+      if(playerValid(player, chunkPos, interaction))
+        return true;
+    #[cfg(feature = "mc-ge-1.18.2")]
+    return false;
+    #[cfg(not(feature = "mc-ge-1.18.2"))]
     return playerMap.getPlayers(chunkPos.toLong()).anyMatch(player -> playerValid(player, chunkPos, interaction));
-    //#endif
   }
 
   @Inject(method = "skipPlayer", at = @At("HEAD"), cancellable = true)

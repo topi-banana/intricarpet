@@ -47,12 +47,13 @@ public class ServerGamePacketListenerImplMixin
     CarpetSettings.impendingFillSkipUpdates.set(false);
   }
 
+  // 1.19 added the acknowledgement sequence argument to handleBlockBreakAction.
+  #[cfg(feature = "mc-ge-1.19.2")]
   private static final String handleBlockBreakAction =
-  //#if MC >= 11900
-  //$$ "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;II)V";
-  //#else
+    "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;II)V";
+  #[cfg(not(feature = "mc-ge-1.19.2"))]
+  private static final String handleBlockBreakAction =
     "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;I)V";
-  //#endif
 
   @Inject(method = "handlePlayerAction", at = @At(value = "INVOKE", target = handleBlockBreakAction))
   private void beforeBreakBlock(ServerboundPlayerActionPacket packet, CallbackInfo ci)

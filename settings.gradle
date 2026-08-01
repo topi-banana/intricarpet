@@ -11,16 +11,6 @@ pluginManagement {
     mavenCentral()
     gradlePluginPortal()
   }
-  resolutionStrategy {
-    eachPlugin {
-      switch (requested.id.id) {
-        case "com.replaymod.preprocess": {
-            useModule("com.github.Fallen-Breath:preprocessor:${requested.version}")
-            break
-        }
-      }
-    }
-  }
 }
 
 def versions = Arrays.asList(
