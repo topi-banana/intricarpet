@@ -67,6 +67,9 @@ default = ["26.2"]
 [build]
 script = { type = "rhai", file = "build.rhai" }
 source-dirs = ["src/main/java"]
+# The mod's own resources — the mixin config, the icon — plus the `fabric.mod.json` template that
+# `build.rhai` expands and writes back over in the output tree.
+resource-dirs = ["src/main/resources"]
 classes-dir = "target/classes"
 
 # Minecraft, Mixin and MixinExtras, from the jals `examples/minecraft` project: it fetches the
@@ -78,4 +81,4 @@ classes-dir = "target/classes"
 # Carpet and the Fabric loader are not here: neither is published to a repository jals can pin a
 # digest against, so they are read from `libs/` instead — see `build.rhai`.
 [dependencies]
-minecraft = { git = "https://github.com/topi-banana/jals", rev = "a46628d6643a6abdcf9e6b82b466fca85b61ffc3", dir = "examples/minecraft" }
+minecraft = { git = "https://github.com/topi-banana/jals", rev = "a661e89f79b87d75ec09deed3331520ef90d9393", dir = "examples/minecraft" }

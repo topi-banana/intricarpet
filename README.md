@@ -8,11 +8,19 @@ This is a carpet extension that adds mainly stuff useful for TNT tech developmen
 
 ## Building
 
-One source tree targets every supported Minecraft release. The release switch is
-[jals](https://github.com/topi-banana/jals) build features — `#[cfg(feature = "mc-ge-1.18.2")]`
-where the source preprocessor used to have `//#if MC >= 11800` — so `./gradlew build` needs a `jals`
-executable on `PATH`, and `jals build --no-default-features --features <release>` compiles a release
-without Gradle. See [`docs/jals.md`](docs/jals.md).
+The build is [jals](https://github.com/topi-banana/jals): `jals.toml` is the manifest, `build.rhai`
+is the build definition, and one source tree targets every supported Minecraft release through build
+features — `#[cfg(feature = "mc-ge-1.18.2")]` where the source preprocessor used to have
+`//#if MC >= 11800`.
+
+```sh
+cargo install --locked --git https://github.com/topi-banana/jals jals-cli   # once
+scripts/fetch-libs.sh 26.2                                                  # carpet + the loader
+jals package --no-default-features --features 26.2                          # → target/intricarpet.jar
+```
+
+Releases before 26.1 lower, lint and expand but do not compile yet — carpet is published in Fabric's
+intermediary namespace there and nothing here can remap it. See [`docs/jals.md`](docs/jals.md).
 
 ## Features
 - Improved explosion logger, which groups explosions by position: `/log explosions compact`

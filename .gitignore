@@ -1,7 +1,8 @@
-# gradle
+# build output
 
-.gradle/
-build/
+target/
+dist/
+libs/
 out/
 classes/
 
@@ -31,8 +32,3 @@ bin/
 # fabric
 
 run/
-
-# jals
-
-target/
-libs/

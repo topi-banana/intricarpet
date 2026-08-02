@@ -8,15 +8,15 @@ on:
         required: false
         default: false
       target_subproject:
-        description: The subproject name of the specified Minecraft version to be built. Leave it empty to build all
+        description: The Minecraft release to be built. Leave it empty to build all
         type: string
         required: false
         default: ''
 
 env:
-  # The jals revision `jals expand` is taken from. Keep it in step with the `minecraft` dependency
-  # pinned in `jals.toml`.
-  JALS_REV: a46628d6643a6abdcf9e6b82b466fca85b61ffc3
+  # The jals revision this build uses. Keep it in step with the `minecraft` dependency pinned in
+  # `jals.toml`.
+  JALS_REV: a661e89f79b87d75ec09deed3331520ef90d9393
 
 jobs:
   build:
@@ -30,20 +30,9 @@ jobs:
           distribution: 'temurin'
           java-version: 25
 
-      - name: Cache gradle files
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            ./.gradle/loom-cache
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/gradle.properties', '**/*.accesswidener') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      # `jals expand` lowers the jals dialect sources to the plain Java each subproject compiles —
-      # what the `//#if MC >= …` preprocessor plugin used to do. jals publishes no binaries yet, so
-      # it is built from source once per pinned revision and cached.
+      # jals is the whole build: it lowers the dialect sources, compiles them, and packages the mod
+      # jar. It publishes no binaries yet, so it is built from source once per pinned revision and
+      # cached.
       - name: Cache jals
         id: cache_jals
         uses: actions/cache@v6
@@ -55,39 +44,65 @@ jobs:
         if: steps.cache_jals.outputs.cache-hit != 'true'
         run: cargo install --locked --git https://github.com/topi-banana/jals --rev "$JALS_REV" jals-cli
 
-      # Lowering is release-specific, so a `#[cfg]` mistake can be invisible in the release this run
-      # packages. Checking every one costs seconds and needs no Gradle, JDK or network.
+      # The verified artifact cache holds the remapped, decompiled Minecraft the `minecraft`
+      # dependency produces. It is the expensive part of a cold build by a wide margin.
+      - name: Cache jals artifacts
+        uses: actions/cache@v6
+        with:
+          path: target/jals/cache
+          key: ${{ runner.os }}-jals-artifacts-${{ hashFiles('jals.toml', 'build.rhai') }}
+          restore-keys: |
+            ${{ runner.os }}-jals-artifacts-
+
+      - name: Select releases
+        id: releases
+        run: |
+          if [ -n "${{ inputs.target_subproject }}" ]; then
+              echo "list=${{ inputs.target_subproject }}" >> $GITHUB_OUTPUT
+          else
+              echo "list=$(ls versions | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          fi
+
+      # Lowering is release-specific, so a `#[cfg]` mistake can be invisible in the release a run
+      # packages. Checking every one costs seconds and needs nothing but jals.
       - name: Check every release lowers
         run: |
-          for dir in versions/*/; do
-            release="$(basename "$dir")"
+          for release in $(ls versions); do
             echo "::group::$release"
             jals expand --no-default-features --features "$release" --dry-run
             echo "::endgroup::"
           done
 
-      - name: Get subproject name to build
-        id: subproject_info
-        run: |
-          if [ "${{ inputs.target_subproject }}" != "" ]
-          then
-              echo "prefix=${{ inputs.target_subproject }}:" >> $GITHUB_OUTPUT
-          else
-              echo "prefix=" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Build with Gradle
-        run: |
-          chmod +x gradlew
-          ./gradlew ${{ steps.subproject_info.outputs.prefix }}build --no-daemon
+      # Carpet's published jar is in Mojang names only from 26.1; before that it is in Fabric's
+      # intermediary namespace, and nothing here can remap it (see docs/jals.md). Those releases
+      # therefore lower and lint but are not compiled.
+      - name: Package
         env:
-          BUILD_ID: ${{ github.run_number }}
-          BUILD_RELEASE: ${{ inputs.release }}
+          JALS_BUILD_ID: ${{ github.run_number }}
+          JALS_BUILD_RELEASE: ${{ inputs.release }}
+        run: |
+          mkdir -p dist
+          mod_version=$(sed -n 's/^[[:space:]]*mod_version[[:space:]]*=[[:space:]]*//p' mod.properties)
+          for release in ${{ steps.releases.outputs.list }}; do
+            properties="versions/$release/release.properties"
+            namespace=$(sed -n 's/^[[:space:]]*carpet_namespace[[:space:]]*=[[:space:]]*//p' "$properties")
+            if [ "$namespace" != "official" ]; then
+              echo "::notice title=$release::skipped: carpet is published in the $namespace namespace"
+              continue
+            fi
+            minecraft=$(sed -n 's/^[[:space:]]*minecraft_version[[:space:]]*=[[:space:]]*//p' "$properties")
+            echo "::group::$release"
+            scripts/fetch-libs.sh "$release"
+            jals package --no-default-features --features "$release" \
+                         --out "dist/intricarpet-v$mod_version-mc$minecraft.jar"
+            echo "::endgroup::"
+          done
+          ls -l dist
 
       - uses: actions/upload-artifact@v7
         with:
           name: build-artifacts
-          path: versions/*/build/libs/
+          path: dist/
 
   summary:
     runs-on: ubuntu-22.04
