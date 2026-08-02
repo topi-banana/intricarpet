@@ -106,7 +106,7 @@ public class ServerChunkCacheMixin
         t.printStackTrace();
       }
     };
-    chunkMapInstance.forEachBlockTickingChunk(wrapper);
+    ((ChunkMapAccessor)(Object)chunkMapInstance).invokeForEachBlockTickingChunk(wrapper);
   }
 
   #[cfg(all(feature = "mc-ge-1.18.2", not(feature = "mc-ge-1.21.5")))]

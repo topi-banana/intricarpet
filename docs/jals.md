@@ -106,6 +106,12 @@ loom's annotation processor generated. So even where the compile succeeds today 
 need neither), a pre-26 release would need both steps added before its jar could be loaded by the
 game.
 
+**An access widener is a loom transform too.** `intricarpet.accesswidener` makes
+`ChunkMap#forEachBlockTickingChunk` callable, and loom applied it to the *compile* classpath;
+nothing does now. The one call site that needed it goes through a Mixin `@Invoker`
+(`ChunkMapAccessor`) instead, which needs no transformed classpath — the widener stays for the
+loader, and this only replaces what it did at compile time. A new one would want the same treatment.
+
 Two smaller things went with Gradle: jar-in-jar bundling of MixinExtras, which the Gradle build did
 for Minecraft below 1.20.5 (`include(…)`), and the JitPack publication, which was Gradle's
 `maven-publish`. Both need capabilities jals does not have yet.

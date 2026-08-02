@@ -9,6 +9,7 @@
     "logger.ExplosionLogHelperMixin",
     "logger.ServerLevelMixin",
 
+    "interactions.ChunkMapAccessor",
     "interactions.ChunkMapMixin",
     "interactions.EntityMixin",
     "interactions.EntitySelectorMixin",
