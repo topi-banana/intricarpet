@@ -1,0 +1,84 @@
+[package]
+name = "intricarpet"
+version = "2.0.7"
+# The jals attribute dialect: `#[cfg(feature = "…")]` over the build features below. This is what
+# replaced the `//#if MC >= …` comment preprocessor — see `docs/jals.md`.
+features = ["attributes"]
+
+# One feature per supported Minecraft release, plus the `mc-ge-<release>` threshold chain the
+# sources actually test.
+#
+# The preprocessor compared a number (`//#if MC >= 11800`); build features are a set, and a set has
+# no `>=`. The chain supplies it: `mc-ge-<release>` enables the `mc-ge-` of the release below it, so
+# selecting one release turns on the thresholds of every older one and a single
+# `#[cfg(feature = "mc-ge-1.18.2")]` means exactly what `MC >= 11800` meant. `MC < X` is
+# `not(feature = "mc-ge-X")`, and a range is `all(feature = "mc-ge-A", not(feature = "mc-ge-B"))`.
+#
+# Every threshold is named after a *declared* release rather than the vanilla boundary it stands
+# for (1.18.2 for the 1.18 change, 1.21.4 for the 1.21.2 one, …): only declared releases are ever
+# selected, so the nearest declared release above a boundary is the same predicate and keeps the
+# chain to one node per release.
+#
+# The release keys must be quoted — a bare `1.21.8` is a TOML dotted key, not a feature name — and
+# each one also forwards its release to the `minecraft` dependency, which is what keeps the sources
+# and the classpath on the same version by construction.
+#
+# They are mutually **exclusive**, which an additive feature model cannot express, so `build.rhai`
+# rejects a second one. `default` therefore carries the newest release and switching means
+# replacing it:
+#
+#     jals build                                            # 26.2
+#     jals build --no-default-features --features 1.21.8    # 1.21.8
+[features]
+default = ["26.2"]
+
+"1.17.1" = ["mc-ge-1.17.1", "minecraft/1.17.1"]
+"1.18.2" = ["mc-ge-1.18.2", "minecraft/1.18.2"]
+"1.19.2" = ["mc-ge-1.19.2", "minecraft/1.19.2"]
+"1.19.3" = ["mc-ge-1.19.3", "minecraft/1.19.3"]
+"1.19.4" = ["mc-ge-1.19.4", "minecraft/1.19.4"]
+"1.20.1" = ["mc-ge-1.20.1", "minecraft/1.20.1"]
+"1.20.2" = ["mc-ge-1.20.2", "minecraft/1.20.2"]
+"1.21.1" = ["mc-ge-1.21.1", "minecraft/1.21.1"]
+"1.21.4" = ["mc-ge-1.21.4", "minecraft/1.21.4"]
+"1.21.5" = ["mc-ge-1.21.5", "minecraft/1.21.5"]
+"1.21.8" = ["mc-ge-1.21.8", "minecraft/1.21.8"]
+"1.21.10" = ["mc-ge-1.21.10", "minecraft/1.21.10"]
+"1.21.11" = ["mc-ge-1.21.11", "minecraft/1.21.11"]
+"26.1.2" = ["mc-ge-26.1.2", "minecraft/26.1.2"]
+"26.2" = ["mc-ge-26.2", "minecraft/26.2"]
+
+"mc-ge-1.17.1" = []
+"mc-ge-1.18.2" = ["mc-ge-1.17.1"]
+"mc-ge-1.19.2" = ["mc-ge-1.18.2"]
+"mc-ge-1.19.3" = ["mc-ge-1.19.2"]
+"mc-ge-1.19.4" = ["mc-ge-1.19.3"]
+"mc-ge-1.20.1" = ["mc-ge-1.19.4"]
+"mc-ge-1.20.2" = ["mc-ge-1.20.1"]
+"mc-ge-1.21.1" = ["mc-ge-1.20.2"]
+"mc-ge-1.21.4" = ["mc-ge-1.21.1"]
+"mc-ge-1.21.5" = ["mc-ge-1.21.4"]
+"mc-ge-1.21.8" = ["mc-ge-1.21.5"]
+"mc-ge-1.21.10" = ["mc-ge-1.21.8"]
+"mc-ge-1.21.11" = ["mc-ge-1.21.10"]
+"mc-ge-26.1.2" = ["mc-ge-1.21.11"]
+"mc-ge-26.2" = ["mc-ge-26.1.2"]
+
+[build]
+script = { type = "rhai", file = "build.rhai" }
+source-dirs = ["src/main/java"]
+# The mod's own resources — the mixin config, the icon — plus the `fabric.mod.json` template that
+# `build.rhai` expands and writes back over in the output tree.
+resource-dirs = ["src/main/resources"]
+classes-dir = "target/classes"
+
+# Minecraft, Mixin and MixinExtras, from the jals `examples/minecraft` project: it fetches the
+# selected release (every fetch pinned by SHA-1), remaps it with the official Mojang mappings,
+# publishes the decompiled game as navigation sources, and puts the remapped game jar — plus, from
+# 1.18, the libraries bundled beside it (Brigadier, Guava, log4j2) — on the compile classpath.
+# `[features]` above forwards this project's release to it, so the two can never disagree.
+#
+# Carpet and the Fabric loader are not here: neither is published to a repository jals can pin a
+# digest against, so they are read from `libs/` instead — see `build.rhai`.
+[dependencies]
+minecraft = { git = "https://github.com/topi-banana/jals", rev = "d2063392d0d92303bf53fc1e936f34a4e40e0331", dir = "examples/minecraft" }

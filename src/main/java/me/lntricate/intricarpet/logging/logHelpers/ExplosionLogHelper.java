@@ -7,12 +7,19 @@ import java.util.Locale;
 import carpet.logging.LoggerRegistry;
 import carpet.utils.Messenger;
 import me.lntricate.intricarpet.helpers.ExplosionHelper;
+// 1.19 folded BaseComponent into Component; carpet's Messenger returns whichever the game has.
+#[cfg(not(feature = "mc-ge-1.19.2"))]
 import net.minecraft.network.chat.BaseComponent;
+#[cfg(feature = "mc-ge-1.19.2")]
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
 public class ExplosionLogHelper
 {
+  #[cfg(not(feature = "mc-ge-1.19.2"))]
   private static BaseComponent log;
+  #[cfg(feature = "mc-ge-1.19.2")]
+  private static Component log;
 
   public static void onExplosion(Vec3 pos, long tick, boolean affectBlocks)
   {
@@ -29,7 +36,19 @@ public class ExplosionLogHelper
     }
   }
 
+  #[cfg(not(feature = "mc-ge-1.19.2"))]
   public static List<BaseComponent> onLog(List<BaseComponent> messages, String option)
+  {
+    if(option.equals("compact"))
+    {
+      if(log != null)
+        messages.add(log);
+    }
+    return messages;
+  }
+
+  #[cfg(feature = "mc-ge-1.19.2")]
+  public static List<Component> onLog(List<Component> messages, String option)
   {
     if(option.equals("compact"))
     {
@@ -62,7 +81,10 @@ public class ExplosionLogHelper
       logCompact(System.currentTimeMillis(), true);
       LoggerRegistry.getLogger("explosions").log((option) ->
       {
+        #[cfg(not(feature = "mc-ge-1.19.2"))]
         return onLog(new ArrayList<BaseComponent>(), option).toArray(new BaseComponent[0]);
+        #[cfg(feature = "mc-ge-1.19.2")]
+        return onLog(new ArrayList<Component>(), option).toArray(new Component[0]);
       });
       log = null;
     }

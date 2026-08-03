@@ -3,8 +3,10 @@ name: Dev Builds
 on:
   push:
     paths:
-      - "*.gradle"
-      - "gradle.properties"
+      - "jals.toml"
+      - "build.rhai"
+      - "mod.properties"
+      - "scripts/**"
       - "src/**"
       - "versions/**"
       - ".github/**"

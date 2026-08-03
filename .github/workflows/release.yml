@@ -74,14 +74,14 @@ jobs:
         id: properties_g
         uses: christian-draeger/read-properties@1.1.1
         with:
-          path: gradle.properties
+          path: mod.properties
           properties: 'mod_name mod_version'
 
       - name: Read version-specific properties
         id: properties_v
         uses: christian-draeger/read-properties@1.1.1
         with:
-          path: ${{ format('versions/{0}/gradle.properties', matrix.subproject_dir) }}
+          path: ${{ format('versions/{0}/release.properties', matrix.subproject_dir) }}
           properties: 'minecraft_version game_versions'
 
       - name: Fix game version
@@ -104,7 +104,7 @@ jobs:
 #          github-tag: ${{ steps.release_info.outputs.tag_name }}
 #          github-token: ${{ secrets.GITHUB_TOKEN }}
 #
-#          files-primary: ${{ format('build-artifacts/{0}/build/libs/!(*-@(dev|sources)).jar', matrix.subproject_dir) }}
+#          files-primary: ${{ format('build-artifacts/*-mc{0}.jar', steps.properties_v.outputs.minecraft_version) }}
 #          files-secondary: ''
 #
 #          name: ${{ format('{0} v{1} for mc{2}', steps.properties_g.outputs.mod_name, steps.properties_g.outputs.mod_version, steps.properties_v.outputs.minecraft_version) }}

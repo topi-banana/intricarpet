@@ -4,28 +4,36 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import net.minecraft.server.level.ServerChunkCache;
 
-//#if MC >= 11800
-//$$ import org.spongepowered.asm.mixin.Final;
-//$$ import org.spongepowered.asm.mixin.Shadow;
-//$$ import org.spongepowered.asm.mixin.Unique;
-//$$ import org.spongepowered.asm.mixin.injection.At;
-//$$ import com.llamalad7.mixinextras.injector.WrapWithCondition;
-//$$ import me.lntricate.intricarpet.interactions.Interaction;
-//$$ import me.lntricate.intricarpet.interfaces.IChunkMap;
-//$$ import net.minecraft.server.level.ChunkMap;
-//$$ import net.minecraft.server.level.ServerLevel;
-//$$ import net.minecraft.world.level.NaturalSpawner.SpawnState;
-//$$ import net.minecraft.world.level.chunk.LevelChunk;
-//#endif
+#[cfg(feature = "mc-ge-1.18.2")]
+import org.spongepowered.asm.mixin.Final;
+#[cfg(feature = "mc-ge-1.18.2")]
+import org.spongepowered.asm.mixin.Shadow;
+#[cfg(feature = "mc-ge-1.18.2")]
+import org.spongepowered.asm.mixin.Unique;
+#[cfg(feature = "mc-ge-1.18.2")]
+import org.spongepowered.asm.mixin.injection.At;
+#[cfg(feature = "mc-ge-1.18.2")]
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
+#[cfg(feature = "mc-ge-1.18.2")]
+import me.lntricate.intricarpet.interactions.Interaction;
+#[cfg(feature = "mc-ge-1.18.2")]
+import me.lntricate.intricarpet.interfaces.IChunkMap;
+#[cfg(feature = "mc-ge-1.18.2")]
+import net.minecraft.server.level.ChunkMap;
+#[cfg(feature = "mc-ge-1.18.2")]
+import net.minecraft.server.level.ServerLevel;
+#[cfg(feature = "mc-ge-1.18.2")]
+import net.minecraft.world.level.NaturalSpawner.SpawnState;
+#[cfg(feature = "mc-ge-1.18.2")]
+import net.minecraft.world.level.chunk.LevelChunk;
 
-//#if MC >= 12100
-//$$ import java.util.List;
-//#endif
+#[cfg(feature = "mc-ge-1.21.1")]
+import java.util.List;
 
-//#if MC >= 12105
-//$$ import org.spongepowered.asm.mixin.injection.Redirect;
-//$$ import java.util.function.Consumer;
-//#endif
+#[cfg(feature = "mc-ge-1.21.5")]
+import org.spongepowered.asm.mixin.injection.Redirect;
+#[cfg(feature = "mc-ge-1.21.5")]
+import java.util.function.Consumer;
 
 // On MC < 1.18 the mob spawning and random tick calls live inside a synthetic lambda in
 // ServerChunkCache#tickChunks, which has no Mojang name to target. Those two conditions are
@@ -33,60 +41,78 @@ import net.minecraft.server.level.ServerChunkCache;
 @Mixin(ServerChunkCache.class)
 public class ServerChunkCacheMixin
 {
-  //#if MC >= 11800
-  //$$ @Final
-  //$$ @Shadow
-  //$$ public ChunkMap chunkMap;
-  //$$ @Unique
-  //$$ private static final String targetMethod =
-    //#if MC >= 12105
-    //$$ "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V";
-    //#elseif MC >= 12102
-    //$$ "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;JLjava/util/List;)V";
-    //#else
-    //$$ "tickChunks()V";
-    //#endif
-    //#if MC >= 12105
-    //$$ @WrapWithCondition(method = "tickSpawningChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;Ljava/util/List;)V"))
-    //$$ private boolean shouldSpawnMobs(ServerLevel a, LevelChunk levelChunk, SpawnState b, List c)
-    //#elseif MC >= 12102
-    //$$ @WrapWithCondition(method = targetMethod, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;Ljava/util/List;)V"))
-    //$$ private boolean shouldSpawnMobs(ServerLevel a, LevelChunk levelChunk, SpawnState b, List c)
-    //#else
-    //$$ @WrapWithCondition(method = targetMethod, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)V"))
-    //$$ private boolean shouldSpawnMobs(ServerLevel a, LevelChunk levelChunk, SpawnState b, boolean c, boolean d, boolean e)
-    //#endif
-  //$$ {
-  //$$   return ((IChunkMap)chunkMap).anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING);
-  //$$ }
-    //#if MC >= 12105
-    //$$ @Redirect(
-    //$$         method = targetMethod,
-    //$$         at = @At(
-    //$$                 value = "INVOKE",
-    //$$                 target = "Lnet/minecraft/server/level/ChunkMap;forEachBlockTickingChunk(Ljava/util/function/Consumer;)V"
-    //$$         )
-    //$$ )
-    //$$ private void redirectForEachBlockTickingChunk(ChunkMap chunkMapInstance, Consumer<LevelChunk> originalConsumer) {
-    //$$   Consumer<LevelChunk> wrapper = (levelChunk) -> {
-    //$$     try {
-    //$$       boolean should = ((IChunkMap)chunkMapInstance)
-    //$$               .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.RANDOMTICKS);
-    //$$       if (should) {
-    //$$         originalConsumer.accept(levelChunk);
-    //$$       }
-    //$$     } catch (Throwable t) {
-    //$$       t.printStackTrace();
-    //$$     }
-    //$$   };
-    //$$   chunkMapInstance.forEachBlockTickingChunk(wrapper);
-    //$$ }
-    //#else
-    //$$ @WrapWithCondition(method = targetMethod, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;tickChunk(Lnet/minecraft/world/level/chunk/LevelChunk;I)V"))
-    //$$ private boolean shouldRandomTick(ServerLevel instance, LevelChunk levelChunk, int i)
-    //$$ {
-    //$$   return ((IChunkMap)chunkMap).anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.RANDOMTICKS);
-    //$$ }
-    //#endif
-  //#endif
+  #[cfg(feature = "mc-ge-1.18.2")]
+  @Final
+  @Shadow
+  public ChunkMap chunkMap;
+
+  // 1.21.2 gave tickChunks a profiler and the ticking chunk list; 1.21.5 took the list back out.
+  #[cfg(feature = "mc-ge-1.21.5")]
+  @Unique
+  private static final String targetMethod =
+    "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V";
+  #[cfg(all(feature = "mc-ge-1.21.4", not(feature = "mc-ge-1.21.5")))]
+  @Unique
+  private static final String targetMethod =
+    "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;JLjava/util/List;)V";
+  #[cfg(all(feature = "mc-ge-1.18.2", not(feature = "mc-ge-1.21.4")))]
+  @Unique
+  private static final String targetMethod =
+    "tickChunks()V";
+
+  // 1.21.5 moved the spawnForChunk call into ServerChunkCache#tickSpawningChunk; before that it
+  // sits in tickChunks itself, taking the spawn flags directly until 1.21.2 replaced them with the
+  // chunk list.
+  #[cfg(feature = "mc-ge-1.21.5")]
+  @WrapWithCondition(method = "tickSpawningChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;Ljava/util/List;)V"))
+  private boolean shouldSpawnMobs(ServerLevel a, LevelChunk levelChunk, SpawnState b, List c)
+  {
+    return ((IChunkMap)chunkMap).anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING);
+  }
+
+  #[cfg(all(feature = "mc-ge-1.21.4", not(feature = "mc-ge-1.21.5")))]
+  @WrapWithCondition(method = targetMethod, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;Ljava/util/List;)V"))
+  private boolean shouldSpawnMobs(ServerLevel a, LevelChunk levelChunk, SpawnState b, List c)
+  {
+    return ((IChunkMap)chunkMap).anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING);
+  }
+
+  #[cfg(all(feature = "mc-ge-1.18.2", not(feature = "mc-ge-1.21.4")))]
+  @WrapWithCondition(method = targetMethod, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)V"))
+  private boolean shouldSpawnMobs(ServerLevel a, LevelChunk levelChunk, SpawnState b, boolean c, boolean d, boolean e)
+  {
+    return ((IChunkMap)chunkMap).anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING);
+  }
+
+  // From 1.21.5 the random tick call sits behind ChunkMap#forEachBlockTickingChunk, so the
+  // condition wraps the consumer rather than the call.
+  #[cfg(feature = "mc-ge-1.21.5")]
+  @Redirect(
+          method = targetMethod,
+          at = @At(
+                  value = "INVOKE",
+                  target = "Lnet/minecraft/server/level/ChunkMap;forEachBlockTickingChunk(Ljava/util/function/Consumer;)V"
+          )
+  )
+  private void redirectForEachBlockTickingChunk(ChunkMap chunkMapInstance, Consumer<LevelChunk> originalConsumer) {
+    Consumer<LevelChunk> wrapper = (levelChunk) -> {
+      try {
+        boolean should = ((IChunkMap)chunkMapInstance)
+                .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.RANDOMTICKS);
+        if (should) {
+          originalConsumer.accept(levelChunk);
+        }
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
+    };
+    ((ChunkMapAccessor)(Object)chunkMapInstance).invokeForEachBlockTickingChunk(wrapper);
+  }
+
+  #[cfg(all(feature = "mc-ge-1.18.2", not(feature = "mc-ge-1.21.5")))]
+  @WrapWithCondition(method = targetMethod, at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;tickChunk(Lnet/minecraft/world/level/chunk/LevelChunk;I)V"))
+  private boolean shouldRandomTick(ServerLevel instance, LevelChunk levelChunk, int i)
+  {
+    return ((IChunkMap)chunkMap).anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.RANDOMTICKS);
+  }
 }
