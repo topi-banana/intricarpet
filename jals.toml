@@ -81,4 +81,4 @@ classes-dir = "target/classes"
 # Carpet and the Fabric loader are not here: neither is published to a repository jals can pin a
 # digest against, so they are read from `libs/` instead — see `build.rhai`.
 [dependencies]
-minecraft = { git = "https://github.com/topi-banana/jals", rev = "a661e89f79b87d75ec09deed3331520ef90d9393", dir = "examples/minecraft" }
+minecraft = { git = "https://github.com/topi-banana/jals", rev = "d2063392d0d92303bf53fc1e936f34a4e40e0331", dir = "examples/minecraft" }

@@ -16,7 +16,7 @@ on:
 env:
   # The jals revision this build uses. Keep it in step with the `minecraft` dependency pinned in
   # `jals.toml`.
-  JALS_REV: a661e89f79b87d75ec09deed3331520ef90d9393
+  JALS_REV: d2063392d0d92303bf53fc1e936f34a4e40e0331
 
 jobs:
   build:
