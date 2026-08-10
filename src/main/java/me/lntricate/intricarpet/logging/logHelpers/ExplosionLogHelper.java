@@ -7,12 +7,19 @@ import java.util.Locale;
 import carpet.logging.LoggerRegistry;
 import carpet.utils.Messenger;
 import me.lntricate.intricarpet.helpers.ExplosionHelper;
-import net.minecraft.network.chat.BaseComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
+
+// 1.19 removed `BaseComponent`; every version in range has the `Component` interface it implemented,
+// so the whole file speaks `Component` and needs no per-version alternative. Under the preprocessor
+// this was `versions/mapping-1.18.2-1.19.2.txt`, a source-level rename applied to the whole tree —
+// the one place a *type* differed, spelled as a build-tool mapping rather than in the source.
+#[cfg(not(feature = "since-1.19"))]
+import net.minecraft.network.chat.BaseComponent;
 
 public class ExplosionLogHelper
 {
-  private static BaseComponent log;
+  private static Component log;
 
   public static void onExplosion(Vec3 pos, long tick, boolean affectBlocks)
   {
@@ -29,7 +36,7 @@ public class ExplosionLogHelper
     }
   }
 
-  public static List<BaseComponent> onLog(List<BaseComponent> messages, String option)
+  public static List<Component> onLog(List<Component> messages, String option)
   {
     if(option.equals("compact"))
     {
@@ -60,10 +67,20 @@ public class ExplosionLogHelper
     if(LoggerRegistry.__explosions)
     {
       logCompact(System.currentTimeMillis(), true);
+      // Carpet's `lMessage` yields the array type its own Minecraft version names, so only the
+      // array the lambda allocates differs — the list it comes from is `Component` throughout.
+      #[cfg(feature = "since-1.19")]
       LoggerRegistry.getLogger("explosions").log((option) ->
       {
-        return onLog(new ArrayList<BaseComponent>(), option).toArray(new BaseComponent[0]);
+        return onLog(new ArrayList<Component>(), option).toArray(new Component[0]);
       });
+
+      #[cfg(not(feature = "since-1.19"))]
+      LoggerRegistry.getLogger("explosions").log((option) ->
+      {
+        return onLog(new ArrayList<Component>(), option).toArray(new BaseComponent[0]);
+      });
+
       log = null;
     }
     ExplosionHelper.clear();

@@ -2,119 +2,107 @@ name: Release
 
 on:
   release:
-    types:
-      - published
+    types: [published]
   workflow_dispatch:
     inputs:
-      target_subproject:
-        description: The subproject name of the specified Minecraft version to be released.
-        type: string
-        required: false
-        default: ''
-      target_release_tag:
-        description: The tag of the release you want to append the artifact to
+      tag:
+        description: The release tag to attach the jars to
         type: string
         required: true
 
+permissions:
+  contents: write
+
+env:
+  JALS_VERSION: main
 
 jobs:
-  matrix_prep:
-    uses: ./.github/workflows/matrix_prep.yml
-    with:
-      target_subproject: ${{ github.event.inputs.target_subproject }}
-
   build:
-    uses: ./.github/workflows/build.yml
-    with:
-      target_subproject: ${{ github.event.inputs.target_subproject }}
-      release: true
-
-  release:
-    needs:
-      - matrix_prep
-      - build
+    # The same fifteen cells as `ci.yml`, built as releases: `JALS_BUILD_RELEASE` drops the
+    # `-SNAPSHOT`/`+build.N` suffix `build.rhai` otherwise puts in `fabric.mod.json`.
+    #
+    # Only the two unobfuscated releases produce a jar today (README §What is not there yet), so
+    # every other cell is best-effort and uploads nothing. When jals grows intermediary mappings
+    # this list needs no edit: the cells that start producing jars start uploading them.
+    name: ${{ matrix.minecraft }}
     runs-on: ubuntu-latest
-
     strategy:
-      matrix: ${{ fromJson(needs.matrix_prep.outputs.matrix) }}
-
+      fail-fast: false
+      matrix:
+        include:
+          - minecraft: "1.17.1"
+          - minecraft: "1.18.2"
+          - minecraft: "1.19.2"
+          - minecraft: "1.19.3"
+          - minecraft: "1.19.4"
+          - minecraft: "1.20.1"
+          - minecraft: "1.20.2"
+          - minecraft: "1.21.1"
+          - minecraft: "1.21.4"
+          - minecraft: "1.21.5"
+          - minecraft: "1.21.8"
+          - minecraft: "1.21.10"
+          - minecraft: "1.21.11"
+          - minecraft: "26.1.2"
+            compile: true
+          - minecraft: "26.2"
+            compile: true
     steps:
       - uses: actions/checkout@v7
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+      - name: Build
+        continue-on-error: ${{ !matrix.compile }}
+        env:
+          JALS_BUILD_RELEASE: "true"
+        run: jals build --features "${{ matrix.minecraft }}"
+      # The jar `[build] remap` writes is named from `[package]`, so every cell produces the same
+      # file name; the Minecraft version goes on here, where the selection is known.
+      - name: Name the jar after the release it targets
+        if: matrix.compile
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          for jar in target/jals/remap/*.jar; do
+            base=$(basename "$jar" .jar)
+            cp "$jar" "dist/${base}-mc${{ matrix.minecraft }}.jar"
+          done
+          ls -l dist
+      - name: Upload the jar
+        if: matrix.compile
+        uses: actions/upload-artifact@v7
+        with:
+          name: intricarpet-mc${{ matrix.minecraft }}
+          path: dist/*.jar
+          if-no-files-found: error
 
-      - name: Download build artifacts
+  publish:
+    name: attach the jars to the release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download every built jar
         uses: actions/download-artifact@v8
         with:
-          name: build-artifacts
-          path: build-artifacts
-
-      - name: Get github release information
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        id: get_release
-        uses: cardinalby/git-get-release-action@v1.1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+          pattern: intricarpet-mc*
+          merge-multiple: true
+          path: dist
+      - run: ls -l dist
+      - name: Attach them to the release
+        uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ github.event.inputs.target_release_tag }}
-
-      - name: Generate publish related information
-        id: release_info
-        run: |
-          if [ $GITHUB_EVENT_NAME == 'release' ]
-          then
-              echo "tag_name=" >> $GITHUB_OUTPUT  # leave an empty value here so softprops/action-gh-release will use the default value
-          elif [ $GITHUB_EVENT_NAME == 'workflow_dispatch' ]
-          then
-              echo "tag_name=${{ github.event.inputs.target_release_tag }}" >> $GITHUB_OUTPUT
-          else
-              echo Unknown github event name $GITHUB_EVENT_NAME
-              exit 1
-          fi
-
-      - name: Read common properties
-        id: properties_g
-        uses: christian-draeger/read-properties@1.1.1
-        with:
-          path: gradle.properties
-          properties: 'mod_name mod_version'
-
-      - name: Read version-specific properties
-        id: properties_v
-        uses: christian-draeger/read-properties@1.1.1
-        with:
-          path: ${{ format('versions/{0}/gradle.properties', matrix.subproject_dir) }}
-          properties: 'minecraft_version game_versions'
-
-      - name: Fix game version
-        id: game_versions
-        run: |
-          # Fixed \n in game_versions isn't parsed by christian-draeger/read-properties as a line separator
-          echo 'value<<EOF' >> $GITHUB_OUTPUT
-          echo -e "${{ steps.properties_v.outputs.game_versions }}" >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
-
-#      - name: Publish Minecraft Mods
-#        uses: Kir-Antipov/mc-publish@v3.2
-#        with:
-#          modrinth-id: _INSERT_MODRITH_MOD_ID_HERE_
-#          modrinth-token: ${{ secrets.MODRINTH_API_TOKEN }}
-#
-#          curseforge-id: _INSERT_CURSEFORGE_MOD_ID_HERE_
-#          curseforge-token: ${{ secrets.CF_API_TOKEN }}
-#
-#          github-tag: ${{ steps.release_info.outputs.tag_name }}
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
-#
-#          files-primary: ${{ format('build-artifacts/{0}/build/libs/!(*-@(dev|sources)).jar', matrix.subproject_dir) }}
-#          files-secondary: ''
-#
-#          name: ${{ format('{0} v{1} for mc{2}', steps.properties_g.outputs.mod_name, steps.properties_g.outputs.mod_version, steps.properties_v.outputs.minecraft_version) }}
-#          version: ${{ format('mc{0}-v{1}', steps.properties_v.outputs.minecraft_version, steps.properties_g.outputs.mod_version) }}
-#          version-type: release
-#          changelog: ${{ format('{0}{1}', github.event.release.body, steps.get_release.outputs.body) }}  # one of them should be an empty string (null)
-#
-#          loaders: fabric
-#          game-versions: ${{ steps.game_versions.outputs.value }}
-#          version-resolver: exact
-#
-#          retry-attempts: 3
-#          retry-delay: 10000
+          tag_name: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+          files: dist/*.jar

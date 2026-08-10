@@ -1,0 +1,198 @@
+# IntriCarpet is built by `jals` alone. There is no Gradle, no Loom and no ReplayMod
+# preprocessor: the version-compatible build that used to be a preprocessor pass over
+# `//#if MC >= 11800` comments is now the jals dialect's own `#[cfg(feature = "…")]`, resolved
+# against the `[features]` table below.
+#
+#     jals build --features 1.21.11
+#     jals lint  --features 1.21.11
+#
+# Exactly one version feature must be selected; `build.rhai` rejects zero and rejects two, because
+# feature resolution is additive (Cargo's model) and cannot express exclusivity on its own.
+
+[package]
+name = "intricarpet"
+version = "2.0.7"
+# `attributes` turns on the jals dialect's `#[cfg(...)]`. It is what makes every `#[cfg]` in
+# `src/main/java` a *conditional-compilation* directive rather than a syntax error: the compile
+# frontend strips every attribute before `javac` sees the source, and blanks — length-preservingly,
+# so line numbers in a stack trace still name the line the author wrote — every declaration,
+# statement or import whose predicate is false.
+features = ["attributes"]
+
+# Two kinds of name live here, and only the first kind is ever selected on a command line.
+#
+# A **version feature** (`1.21.11`) is one release of the mod. It does three things at once: it
+# routes the same name into the Minecraft SDK, activates that release's Carpet jar, and enables the
+# highest *threshold* feature the release satisfies.
+#
+# A **threshold feature** (`since-1.21.5`) is what the source actually tests. Each one enables its
+# predecessor, so naming the highest enables the whole chain below it and `#[cfg(feature =
+# "since-1.18")]` is true for every release from 1.18.2 up without any release listing eight names.
+# That is the same shape `jals-config` gives the Java release presets, and it is what replaces the
+# preprocessor's numeric comparisons: `MC >= 11800` is `feature = "since-1.18"`, and `MC < 11800`
+# is `not(feature = "since-1.18")`.
+#
+# A threshold exists only where the source branches on it. Adding one means adding a link to the
+# chain and pointing the affected releases at it — never editing the releases that come before.
+[features]
+"since-1.18" = []
+"since-1.19" = ["since-1.18"]
+"since-1.20.2" = ["since-1.19"]
+"since-1.21" = ["since-1.20.2"]
+"since-1.21.2" = ["since-1.21"]
+"since-1.21.5" = ["since-1.21.2"]
+"since-1.21.6" = ["since-1.21.5"]
+"since-26" = ["since-1.21.6"]
+
+# Reobfuscate the compiled classes with the release's official mappings before packaging. Off by
+# default, because a Fabric mod is loaded through *intermediary* names and jals cannot produce
+# those yet (see README §What jals does not do yet); with it on, the jar carries the names the
+# vanilla server itself uses, which is what a plain Mixin launcher wants.
+reobf = []
+
+"1.17.1" = ["minecraft/1.17.1", "dep:carpet-1.17.1"]
+"1.18.2" = ["since-1.18", "minecraft/1.18.2", "dep:carpet-1.18.2"]
+"1.19.2" = ["since-1.19", "minecraft/1.19.2", "dep:carpet-1.19.2"]
+"1.19.3" = ["since-1.19", "minecraft/1.19.3", "dep:carpet-1.19.3"]
+"1.19.4" = ["since-1.19", "minecraft/1.19.4", "dep:carpet-1.19.4"]
+"1.20.1" = ["since-1.19", "minecraft/1.20.1", "dep:carpet-1.20.1"]
+"1.20.2" = ["since-1.20.2", "minecraft/1.20.2", "dep:carpet-1.20.2"]
+"1.21.1" = ["since-1.21", "minecraft/1.21.1", "dep:carpet-1.21.1"]
+"1.21.4" = ["since-1.21.2", "minecraft/1.21.4", "dep:carpet-1.21.4"]
+"1.21.5" = ["since-1.21.5", "minecraft/1.21.5", "dep:carpet-1.21.5"]
+"1.21.8" = ["since-1.21.6", "minecraft/1.21.8", "dep:carpet-1.21.8"]
+"1.21.10" = ["since-1.21.6", "minecraft/1.21.10", "dep:carpet-1.21.10"]
+"1.21.11" = ["since-1.21.6", "minecraft/1.21.11", "dep:carpet-1.21.11"]
+"26.1.2" = ["since-26", "minecraft/26.1.2", "dep:carpet-26.1.2"]
+"26.2" = ["since-26", "minecraft/26.2", "dep:carpet-26.2"]
+
+# The Minecraft SDK is jals' own `examples/minecraft`: a source project whose build script fetches
+# the release, unwraps the 1.18+ bundler, remaps it with the official mappings, puts the game jar —
+# and SpongePowered Mixin and MixinExtras — on this project's compile classpath, and publishes the
+# matching sources as navigation trees an editor can open. Every version feature above forwards its
+# own name into it, which is the whole of what selects a release.
+#
+# Carpet is one optional jar per release, activated by that release's feature (`dep:carpet-1.21.11`)
+# and inert otherwise, so a selection pulls exactly one Carpet down.
+[dependencies]
+minecraft = { git = "https://github.com/topi-banana/jals", branch = "main", dir = "examples/minecraft" }
+fabric-loader = { jar = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.18.4/fabric-loader-0.18.4.jar" }
+"carpet-1.17.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.17.1-1.4.57+v220119/fabric-carpet-1.17.1-1.4.57+v220119.jar", optional = true }
+"carpet-1.18.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.18.2-1.4.69+v220331/fabric-carpet-1.18.2-1.4.69+v220331.jar", optional = true }
+"carpet-1.19.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.2-1.4.84+v221018/fabric-carpet-1.19.2-1.4.84+v221018.jar", optional = true }
+"carpet-1.19.3" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.3-1.4.96+v230201/fabric-carpet-1.19.3-1.4.96+v230201.jar", optional = true }
+"carpet-1.19.4" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.4-1.4.100+v230314/fabric-carpet-1.19.4-1.4.100+v230314.jar", optional = true }
+"carpet-1.20.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.20-1.4.112+v230608/fabric-carpet-1.20-1.4.112+v230608.jar", optional = true }
+"carpet-1.20.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.20.2-1.4.119+v230928/fabric-carpet-1.20.2-1.4.119+v230928.jar", optional = true }
+"carpet-1.21.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21-1.4.147+v240613/fabric-carpet-1.21-1.4.147+v240613.jar", optional = true }
+"carpet-1.21.4" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.4-1.4.161+v241203/fabric-carpet-1.21.4-1.4.161+v241203.jar", optional = true }
+"carpet-1.21.5" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.5-1.4.169+v250325/fabric-carpet-1.21.5-1.4.169+v250325.jar", optional = true }
+"carpet-1.21.8" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.7-1.4.177+v250630/fabric-carpet-1.21.7-1.4.177+v250630.jar", optional = true }
+"carpet-1.21.10" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.10-1.4.188+v251016/fabric-carpet-1.21.10-1.4.188+v251016.jar", optional = true }
+"carpet-1.21.11" = { jar = "https://jitpack.io/com/github/gnembon/fabric-carpet/1.4.194/fabric-carpet-1.4.194.jar", optional = true }
+"carpet-26.1.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.1+v260401/fabric-carpet-26.1+v260401.jar", optional = true }
+"carpet-26.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.2+v260616/fabric-carpet-26.2+v260616.jar", optional = true }
+
+[build]
+script = { type = "rhai", file = "build.rhai" }
+source-dirs = ["src/main/java"]
+# Two roots. `src/main/resources` is what is authored — today only the mod icon. The second is
+# where `build.rhai` writes the two resources that used to be Gradle `processResources` filters:
+# `fabric.mod.json` (the mod id, name, version and the release's dependency ranges) and
+# `intricarpet.mixins.json` (the Mixin compatibility level, and whether `ChunkMapAccessor` exists in
+# this selection at all). Templating them in the build script rather than in the build *tool* is
+# what let the tool go.
+resource-dirs = ["src/main/resources", "target/jals/build/rhai/out/resources"]
+# Package the compiled classes and both resource roots into a jar. `with` names one `[mappings]`
+# key; that key holds one alternative per obfuscated release, and every one of them additionally
+# requires `reobf`, so the default selection activates none and the step packages without rewriting
+# a single name.
+remap = { with = "mojmap" }
+
+# One mapping set per release that ships obfuscated — 26.1 onward ships deobfuscated and Mojang
+# publishes no mappings for it, so those two releases name no alternative and need none. Each URL is
+# content-addressed by the same SHA-1 it is checked against, so one digest pins both the address and
+# the bytes; `max-bytes` is the published size rounded up to the next MiB.
+#
+# At most one alternative may ever be active, which jals enforces statically: two alternatives whose
+# `required-features` are comparable by inclusion are rejected, because some selection would
+# activate both. Each row here names `reobf` *and* exactly one version, so the thirteen sets are
+# pairwise incomparable.
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.17.1"]
+url = "https://piston-data.mojang.com/v1/objects/f6cae1c5c1255f68ba4834b16a0da6a09621fe13/server.txt"
+sha1 = "f6cae1c5c1255f68ba4834b16a0da6a09621fe13"
+max-bytes = 5242880
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.18.2"]
+url = "https://piston-data.mojang.com/v1/objects/e562f588fea155d96291267465dc3323bfe1551b/server.txt"
+sha1 = "e562f588fea155d96291267465dc3323bfe1551b"
+max-bytes = 5242880
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.19.2"]
+url = "https://piston-data.mojang.com/v1/objects/ed5e6e8334ad67f5af0150beed0f3d156d74bd57/server.txt"
+sha1 = "ed5e6e8334ad67f5af0150beed0f3d156d74bd57"
+max-bytes = 6291456
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.19.3"]
+url = "https://piston-data.mojang.com/v1/objects/bc44f6dd84cd2f3ad8c0caad850eaca9e82067e3/server.txt"
+sha1 = "bc44f6dd84cd2f3ad8c0caad850eaca9e82067e3"
+max-bytes = 6291456
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.19.4"]
+url = "https://piston-data.mojang.com/v1/objects/73c8bb982e420b33aad9632b482608c5c33e2d13/server.txt"
+sha1 = "73c8bb982e420b33aad9632b482608c5c33e2d13"
+max-bytes = 6291456
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.20.1"]
+url = "https://piston-data.mojang.com/v1/objects/0b4dba049482496c507b2387a73a913230ebbd76/server.txt"
+sha1 = "0b4dba049482496c507b2387a73a913230ebbd76"
+max-bytes = 6291456
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.20.2"]
+url = "https://piston-data.mojang.com/v1/objects/dced504a9b5df367ddd3477adac084cea8024ba4/server.txt"
+sha1 = "dced504a9b5df367ddd3477adac084cea8024ba4"
+max-bytes = 7340032
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.21.1"]
+url = "https://piston-data.mojang.com/v1/objects/03f8985492bda0afc0898465341eb0acef35f570/server.txt"
+sha1 = "03f8985492bda0afc0898465341eb0acef35f570"
+max-bytes = 8388608
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.21.4"]
+url = "https://piston-data.mojang.com/v1/objects/0b1e60cc509cfb0172573ae56b436c29febbc187/server.txt"
+sha1 = "0b1e60cc509cfb0172573ae56b436c29febbc187"
+max-bytes = 8388608
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.21.5"]
+url = "https://piston-data.mojang.com/v1/objects/f4812c1d66d0098a94616b19c21829e591d0af3a/server.txt"
+sha1 = "f4812c1d66d0098a94616b19c21829e591d0af3a"
+max-bytes = 8388608
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.21.8"]
+url = "https://piston-data.mojang.com/v1/objects/eb1e1eb47cb740012fc82eacc394859463684132/server.txt"
+sha1 = "eb1e1eb47cb740012fc82eacc394859463684132"
+max-bytes = 8388608
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.21.10"]
+url = "https://piston-data.mojang.com/v1/objects/c5440743411a6fd7490fa18a4b6c5d8edf36d88b/server.txt"
+sha1 = "c5440743411a6fd7490fa18a4b6c5d8edf36d88b"
+max-bytes = 9437184
+
+[[mappings.mojmap]]
+required-features = ["reobf", "1.21.11"]
+url = "https://piston-data.mojang.com/v1/objects/5621e9253f05fd57872bbe7f8ddf5f9a7d525955/server.txt"
+sha1 = "5621e9253f05fd57872bbe7f8ddf5f9a7d525955"
+max-bytes = 9437184

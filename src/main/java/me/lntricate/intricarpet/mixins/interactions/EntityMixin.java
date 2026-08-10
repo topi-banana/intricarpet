@@ -33,22 +33,32 @@ public class EntityMixin
   //   return original || noBlockInteraction();
   // }
 
-  //#if MC <= 12104
+  // 1.21.5 widened `Block#fallOn`'s fall distance from `float` to `double`.
+  #[cfg(not(feature = "since-1.21.5"))]
   @WrapWithCondition(method = "checkFallDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;F)V"))
   private boolean shouldFallOn(Block instance, Level level, BlockState blockState, BlockPos blockPos, Entity entity, float fallDistance)
-  //#else
-  //$$ @WrapWithCondition(method = "checkFallDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;D)V"))
-  //$$ private boolean shouldFallOn(Block instance, Level level, BlockState blockState, BlockPos blockPos, Entity entity, double fallDistance)
-  //#endif
   {
     return !noBlockInteraction();
   }
 
-  //#if MC <= 12105
+  #[cfg(feature = "since-1.21.5")]
+  @WrapWithCondition(method = "checkFallDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;D)V"))
+  private boolean shouldFallOn(Block instance, Level level, BlockState blockState, BlockPos blockPos, Entity entity, double fallDistance)
+  {
+    return !noBlockInteraction();
+  }
+
+  // 1.21.6 gave `checkInsideBlocks` arguments, so the bare name is no longer unambiguous.
+  #[cfg(not(feature = "since-1.21.6"))]
   @Inject(method = "checkInsideBlocks", at = @At("HEAD"), cancellable = true)
-  //#else
-  //$$ @Inject(method = "checkInsideBlocks(Ljava/util/List;Lnet/minecraft/world/entity/InsideBlockEffectApplier$StepBasedCollector;)V", at = @At("HEAD"), cancellable = true)
-  //#endif
+  private void checkInsideBlocks(CallbackInfo ci)
+  {
+    if(noBlockInteraction())
+      ci.cancel();
+  }
+
+  #[cfg(feature = "since-1.21.6")]
+  @Inject(method = "checkInsideBlocks(Ljava/util/List;Lnet/minecraft/world/entity/InsideBlockEffectApplier$StepBasedCollector;)V", at = @At("HEAD"), cancellable = true)
   private void checkInsideBlocks(CallbackInfo ci)
   {
     if(noBlockInteraction())
@@ -61,12 +71,11 @@ public class EntityMixin
     return original || noBlockInteraction();
   }
 
-  //#if MC < 12100
+  #[cfg(not(feature = "since-1.21"))]
   @Inject(method = "teleportToWithTicket", at = @At("HEAD"), cancellable = true, remap = false)
   private void teleportToWithTicket(double x, double y, double z, CallbackInfo ci)
   {
     if((Entity)(Object)this instanceof IServerPlayer player && !player.getInteraction(Interaction.CHUNKLOADING))
       ci.cancel();
   }
-  //#endif
 }

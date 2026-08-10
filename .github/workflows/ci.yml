@@ -1,0 +1,167 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "src/**"
+      - "templates/**"
+      - "jals.toml"
+      - "build.rhai"
+      - ".github/workflows/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The `jals` this repository builds with. The `Setup jals` action takes `latest` (the newest
+  # published release) or any git ref; until jals cuts a release this is a ref, which the action
+  # compiles with `cargo install` — hence the Rust toolchain and the tool-cache restore below.
+  # Pinning it here rather than per job is what makes the cache key mean something.
+  JALS_VERSION: main
+
+jobs:
+  build:
+    # One cell per supported Minecraft release, which is exactly the `[features]` table in
+    # `jals.toml`. The whole point of the migration is that these fifteen builds are one source
+    # tree and one manifest: the cell differs only in `--features`.
+    name: ${{ matrix.minecraft }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - minecraft: "1.17.1"
+          - minecraft: "1.18.2"
+          - minecraft: "1.19.2"
+          - minecraft: "1.19.3"
+          - minecraft: "1.19.4"
+          - minecraft: "1.20.1"
+          - minecraft: "1.20.2"
+          - minecraft: "1.21.1"
+          - minecraft: "1.21.4"
+          - minecraft: "1.21.5"
+          - minecraft: "1.21.8"
+          - minecraft: "1.21.10"
+          - minecraft: "1.21.11"
+          # The two unobfuscated releases. Only these two can reach a finished jar today — see
+          # `compile` below and README §What is not there yet.
+          - minecraft: "26.1.2"
+            compile: true
+          - minecraft: "26.2"
+            compile: true
+    steps:
+      - uses: actions/checkout@v7
+
+      # `jals build` shells out to `javac`, and the newest release compiles at `--release 25`.
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      # Only the source fallback needs this; a released `jals` is a download. It is unconditional
+      # because `JALS_VERSION` is what decides, and a step whose `if` restates that decision is a
+      # second place to keep it right.
+      - uses: dtolnay/rust-toolchain@stable
+
+      # The action installs into the runner tool cache and reuses whatever is already there, so
+      # restoring that directory turns a five-minute `cargo install` into a cache hit for every
+      # cell after the first.
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+
+      # Fetches the game jar, unwraps the bundler, remaps it with the official mappings, fetches
+      # Carpet and the loader, renders the two resource templates, compiles and packages.
+      #
+      # `continue-on-error` on the obfuscated releases is not a green light: jals has no
+      # intermediary (Tiny v2) mappings yet, so Carpet's intermediary-named jar and the
+      # Mojang-named game jar cannot be put on one classpath and `javac` stops there. The step
+      # still runs, because everything before `javac` — the feature routing, the build script, the
+      # SDK's fetch/remap, the `#[cfg]` lowering — is real work this catches regressions in, and
+      # the log says exactly how far it got. The `lint` job below is the gate that does hold for
+      # every release.
+      - name: Build
+        id: build
+        continue-on-error: ${{ !matrix.compile }}
+        env:
+          JALS_BUILD_ID: ${{ github.run_number }}
+        run: jals build --features "${{ matrix.minecraft }}"
+
+      - name: Upload the jar
+        if: matrix.compile
+        uses: actions/upload-artifact@v7
+        with:
+          name: intricarpet-mc${{ matrix.minecraft }}
+          path: target/jals/remap/*.jar
+          if-no-files-found: error
+
+  lint:
+    # The gate that holds for every release. For each selection the dialect frontend has to accept
+    # every `#[cfg]` in the tree: a predicate that is malformed, an attribute on a construct that
+    # cannot host one, an attribute after a modifier or annotation. `jals-lint` reports exactly that
+    # set under the fixed `cfg` rule, deliberately outside the per-rule severity gate — a
+    # build-blocking error is not a configurable lint — so `jalslint.toml` cannot switch it off.
+    #
+    # This is what replaced the preprocessor, checked once per release rather than once. It runs
+    # offline against whatever the verified cache holds, which is nothing here: resolving fifteen
+    # game jars to lint a tree that has already been built by the job above would double the
+    # matrix's cost for an answer `javac` gives better.
+    name: lint (${{ matrix.minecraft }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft:
+          - "1.17.1"
+          - "1.18.2"
+          - "1.19.2"
+          - "1.19.3"
+          - "1.19.4"
+          - "1.20.1"
+          - "1.20.2"
+          - "1.21.1"
+          - "1.21.4"
+          - "1.21.5"
+          - "1.21.8"
+          - "1.21.10"
+          - "1.21.11"
+          - "26.1.2"
+          - "26.2"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+      # Tracked files only: nothing under `target/` is authored, and neither is anything a build
+      # script publishes into a source root.
+      #
+      # No `jals fmt --check`: the mod is written in its own Allman-brace, two-space style, and
+      # `jals fmt` renders google-java-format. Reformatting the tree is a change worth making on
+      # its own terms, not a side effect of dropping Gradle.
+      - name: Lint every selection
+        run: |
+          mapfile -t sources < <(git ls-files -- '*.java')
+          printf 'checking %s\n' "${sources[@]}"
+          jals lint --features "${{ matrix.minecraft }}" "${sources[@]}"

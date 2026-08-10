@@ -47,12 +47,15 @@ public class ServerGamePacketListenerImplMixin
     CarpetSettings.impendingFillSkipUpdates.set(false);
   }
 
+  // 1.19 added the `Direction` argument's sequence number, so the descriptor the two injectors
+  // below target gained a second `int`.
+  #[cfg(feature = "since-1.19")]
   private static final String handleBlockBreakAction =
-  //#if MC >= 11900
-  //$$ "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;II)V";
-  //#else
+    "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;II)V";
+
+  #[cfg(not(feature = "since-1.19"))]
+  private static final String handleBlockBreakAction =
     "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;I)V";
-  //#endif
 
   @Inject(method = "handlePlayerAction", at = @At(value = "INVOKE", target = handleBlockBreakAction))
   private void beforeBreakBlock(ServerboundPlayerActionPacket packet, CallbackInfo ci)
