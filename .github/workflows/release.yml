@@ -14,10 +14,7 @@ permissions:
   contents: write
 
 env:
-  # >>> REVERT BEFORE MERGE: pin back to `main` <<<
-  # The branch of topi-banana/jals#238 — see the note beside `uses:` below, and `ci.yml`'s longer
-  # one for why `main` will not do even once the action lands there.
-  JALS_VERSION: claude/gradle-removal-jals-migration-49n13e
+  JALS_VERSION: main
 
 jobs:
   build:
@@ -64,13 +61,7 @@ jobs:
           path: ${{ runner.tool_cache }}/jals
           key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
       - name: Install jals
-      # >>> REVERT BEFORE MERGE: pin back to `topi-banana/jals@main` <<<
-      # The `Setup jals` action lives on topi-banana/jals#238 and is not on `main` yet, so
-      # `@main` resolves to a commit with no `action.yml` and every cell dies before doing any
-      # work. Pointing at that PR's branch is what makes this PR's CI say anything at all; it is
-      # not how this should merge. `uses:` takes no expression, so the ref cannot come from the
-      # `env` block above and each of the three call sites carries this note.
-        uses: topi-banana/jals@claude/gradle-removal-jals-migration-49n13e
+        uses: topi-banana/jals@main
         with:
           version: ${{ env.JALS_VERSION }}
       - name: Build

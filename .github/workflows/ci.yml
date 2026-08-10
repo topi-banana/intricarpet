@@ -24,13 +24,7 @@ env:
   # published release) or any git ref; until jals cuts a release this is a ref, which the action
   # compiles with `cargo install` — hence the Rust toolchain and the tool-cache restore below.
   # Pinning it here rather than per job is what makes the cache key mean something.
-  #
-  # >>> REVERT BEFORE MERGE: pin back to `main` <<<
-  # This is the branch of topi-banana/jals#238, for the same reason the `uses:` below points at it.
-  # `main` would not do even once the action lands there: this project declares one optional Carpet
-  # jar per release, and the fix that keeps the fourteen it did not activate off the classpath is in
-  # that PR too.
-  JALS_VERSION: claude/gradle-removal-jals-migration-49n13e
+  JALS_VERSION: main
 
 jobs:
   build:
@@ -87,13 +81,7 @@ jobs:
           key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install jals
-      # >>> REVERT BEFORE MERGE: pin back to `topi-banana/jals@main` <<<
-      # The `Setup jals` action lives on topi-banana/jals#238 and is not on `main` yet, so
-      # `@main` resolves to a commit with no `action.yml` and every cell dies before doing any
-      # work. Pointing at that PR's branch is what makes this PR's CI say anything at all; it is
-      # not how this should merge. `uses:` takes no expression, so the ref cannot come from the
-      # `env` block above and each of the three call sites carries this note.
-        uses: topi-banana/jals@claude/gradle-removal-jals-migration-49n13e
+        uses: topi-banana/jals@main
         with:
           version: ${{ env.JALS_VERSION }}
 
@@ -163,13 +151,7 @@ jobs:
           path: ${{ runner.tool_cache }}/jals
           key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
       - name: Install jals
-      # >>> REVERT BEFORE MERGE: pin back to `topi-banana/jals@main` <<<
-      # The `Setup jals` action lives on topi-banana/jals#238 and is not on `main` yet, so
-      # `@main` resolves to a commit with no `action.yml` and every cell dies before doing any
-      # work. Pointing at that PR's branch is what makes this PR's CI say anything at all; it is
-      # not how this should merge. `uses:` takes no expression, so the ref cannot come from the
-      # `env` block above and each of the three call sites carries this note.
-        uses: topi-banana/jals@claude/gradle-removal-jals-migration-49n13e
+        uses: topi-banana/jals@main
         with:
           version: ${{ env.JALS_VERSION }}
       # Tracked files only: nothing under `target/` is authored, and neither is anything a build
