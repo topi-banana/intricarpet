@@ -17,6 +17,41 @@ env:
   JALS_VERSION: main
 
 jobs:
+  jals:
+    # The same resolution as `ci.yml`, and for the same reason: `JALS_VERSION` may name a moving
+    # ref, and a tool cache keyed on the ref's *name* never invalidates — every run after the
+    # first is served the jals that happened to be current when the entry was written. Key on the
+    # commit the ref points at instead, resolved once for the whole run.
+    name: resolve jals
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.resolve.outputs.id }}
+    steps:
+      - name: Resolve JALS_VERSION to something immutable
+        id: resolve
+        run: |
+          set -euo pipefail
+          if [ "${JALS_VERSION}" = latest ]; then
+            # `latest` is a published release, so the tag name is the immutable half; re-cutting a
+            # release moves the tag and therefore the key.
+            id=$(curl -fsSL -H "Authorization: Bearer ${{ github.token }}" \
+              https://api.github.com/repos/topi-banana/jals/releases/latest | jq -r .tag_name)
+          else
+            # A branch or a tag resolves to its commit. `git ls-remote` prints nothing for a raw
+            # commit sha, which is already immutable and needs no resolving.
+            # `head -n1` because a pattern matches every ref ending in it, and a branch
+            # and a tag of the same name would otherwise put two shas in the key.
+            id=$(git ls-remote https://github.com/topi-banana/jals "${JALS_VERSION}" \
+              | head -n1 | cut -f1) || true
+            [ -n "${id}" ] || id="${JALS_VERSION}"
+          fi
+          [ -n "${id}" ] && [ "${id}" != null ] || {
+            echo "could not resolve JALS_VERSION=${JALS_VERSION} against topi-banana/jals" >&2
+            exit 1
+          }
+          echo "${JALS_VERSION} -> ${id}"
+          echo "id=${id}" >>"$GITHUB_OUTPUT"
+
   build:
     # The same fifteen cells as `ci.yml`, built as releases: `JALS_BUILD_RELEASE` drops the
     # `-SNAPSHOT`/`+build.N` suffix `build.rhai` otherwise puts in `fabric.mod.json`.
@@ -24,6 +59,7 @@ jobs:
     # Only the two unobfuscated releases produce a jar today (README §What is not there yet), so
     # every other cell is best-effort and uploads nothing. When jals grows intermediary mappings
     # this list needs no edit: the cells that start producing jars start uploading them.
+    needs: jals
     name: ${{ matrix.minecraft }}
     runs-on: ubuntu-latest
     strategy:
@@ -59,7 +95,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.tool_cache }}/jals
-          key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
       - name: Install jals
         uses: topi-banana/jals@main
         with:

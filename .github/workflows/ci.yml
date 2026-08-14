@@ -23,14 +23,57 @@ env:
   # The `jals` this repository builds with. The `Setup jals` action takes `latest` (the newest
   # published release) or any git ref; until jals cuts a release this is a ref, which the action
   # compiles with `cargo install` — hence the Rust toolchain and the tool-cache restore below.
-  # Pinning it here rather than per job is what makes the cache key mean something.
+  # Pinning it here rather than per job is what keeps the whole matrix on one toolchain; the
+  # `jals` job below turns it into the commit the tool cache is actually keyed on.
   JALS_VERSION: main
 
 jobs:
+  jals:
+    # `JALS_VERSION` may name a moving ref, and the tool cache every job below restores is keyed on
+    # it. Keying on the *name* of a branch is keying on a constant: the entry written the first
+    # time `main` was installed is served for every run after it, so CI keeps running whatever jals
+    # was current on the day the cache was warmed. That is not hypothetical — it is why `fmt`
+    # failed against a tree this file's own `JALS_VERSION` had just formatted. Resolve the ref to
+    # the commit it points at and key on that, so moving the ref writes a new entry.
+    #
+    # Resolved once for the whole run, not per cell: a push to jals mid-run would otherwise hand
+    # different cells different binaries, and a matrix that disagrees with itself about its own
+    # toolchain is worse than a stale one.
+    name: resolve jals
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.resolve.outputs.id }}
+    steps:
+      - name: Resolve JALS_VERSION to something immutable
+        id: resolve
+        run: |
+          set -euo pipefail
+          if [ "${JALS_VERSION}" = latest ]; then
+            # `latest` is a published release, so the tag name is the immutable half; re-cutting a
+            # release moves the tag and therefore the key.
+            id=$(curl -fsSL -H "Authorization: Bearer ${{ github.token }}" \
+              https://api.github.com/repos/topi-banana/jals/releases/latest | jq -r .tag_name)
+          else
+            # A branch or a tag resolves to its commit. `git ls-remote` prints nothing for a raw
+            # commit sha, which is already immutable and needs no resolving.
+            # `head -n1` because a pattern matches every ref ending in it, and a branch
+            # and a tag of the same name would otherwise put two shas in the key.
+            id=$(git ls-remote https://github.com/topi-banana/jals "${JALS_VERSION}" \
+              | head -n1 | cut -f1) || true
+            [ -n "${id}" ] || id="${JALS_VERSION}"
+          fi
+          [ -n "${id}" ] && [ "${id}" != null ] || {
+            echo "could not resolve JALS_VERSION=${JALS_VERSION} against topi-banana/jals" >&2
+            exit 1
+          }
+          echo "${JALS_VERSION} -> ${id}"
+          echo "id=${id}" >>"$GITHUB_OUTPUT"
+
   build:
     # One cell per supported Minecraft release, which is exactly the `[features]` table in
     # `jals.toml`. The whole point of the migration is that these fifteen builds are one source
     # tree and one manifest: the cell differs only in `--features`.
+    needs: jals
     name: ${{ matrix.minecraft }}
     runs-on: ubuntu-latest
     strategy:
@@ -78,7 +121,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.tool_cache }}/jals
-          key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
 
       - name: Install jals
         uses: topi-banana/jals@main
@@ -121,6 +164,7 @@ jobs:
     # offline against whatever the verified cache holds, which is nothing here: resolving fifteen
     # game jars to lint a tree that has already been built by the job above would double the
     # matrix's cost for an answer `javac` gives better.
+    needs: jals
     name: lint (${{ matrix.minecraft }})
     runs-on: ubuntu-latest
     strategy:
@@ -149,7 +193,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.tool_cache }}/jals
-          key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
       - name: Install jals
         uses: topi-banana/jals@main
         with:
@@ -170,6 +214,7 @@ jobs:
     # The tree is formatted by `jals fmt`'s own defaults, with no `jalsfmt.toml` to override them.
     # That is what makes `JALS_VERSION` the whole specification of this check: it names the rule set
     # as much as it names the binary.
+    needs: jals
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -178,7 +223,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.tool_cache }}/jals
-          key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
       - name: Install jals
         uses: topi-banana/jals@main
         with:
