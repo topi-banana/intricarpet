@@ -104,23 +104,40 @@ package-private call — is a Mixin `@Invoker` accessor
 | `versions/*/intricarpet.accesswidener`            | `ChunkMapAccessor`, a Mixin `@Invoker`                                  |
 | Loom: fetch / bundler / remap / Mixin classpath   | `[dependencies] minecraft`, jals' Minecraft SDK                         |
 | `modImplementation` Carpet, `fabric-loader`       | `[dependencies]`, one optional Carpet jar per release                   |
+| Loom remapping Carpet to the project's namespace  | `[dependencies] remap` over `mappings/intermediary-*.txt`               |
 | `processResources { expand … }`                   | `templates/*.json` rendered by `build.rhai`                             |
 | `JavaCompile { options … }`, `sourceCompatibility`| `build.add_javac_arg` in `build.rhai`                                   |
 | `buildAndGather`, the matrix workflows            | one `--features` matrix in `.github/workflows/ci.yml`                   |
 
-### What is not there yet
+### How Carpet gets onto the classpath
 
-`jals build` reaches a finished jar for **26.1.2 and 26.2** only. Those two releases ship
-deobfuscated: the game jar, Carpet and the mod all speak the same names, which is why the old
-Gradle build applied plain `fabric-loom` there and `fabric-loom-remap` everywhere else.
+26.1 onward ships deobfuscated: the game jar, Carpet and the mod all speak the same names, which is
+why the old Gradle build applied plain `fabric-loom` there and `fabric-loom-remap` everywhere else.
 
 For 1.17.1 through 1.21.11 the mod compiles against Mojang-named game classes while the Carpet
-release jar is *intermediary*-named, and jals cannot yet read the Tiny v2 mappings that relate the
-two — so `javac` stops at the first Carpet API whose signature mentions a Minecraft type. The same
-gap means a jar for those releases could not be loaded by Fabric even if it compiled, because a
-Fabric mod is distributed in intermediary names. Everything before that step is real and is
-exercised by CI on every release: the feature routing, the build script, the SDK's fetch → bundler
-→ remap, and the `#[cfg]` lowering, which `jals lint` gates for all fifteen.
+release jar is *intermediary*-named, so as published the two cannot share a classpath — `javac`
+stops at the first Carpet API whose signature mentions a Minecraft type. `[dependencies] remap`
+closes that: it deobfuscates the Carpet jar before it reaches the classpath, against one
+`[[mappings.intermediary]]` alternative per release.
 
-`[features] reobf` packages the classes under the release's official (obfuscated) names instead,
-which is what a plain Mixin launcher wants; it is not what Fabric wants, so it is off by default.
+Those mapping files are generated rather than written, by `mappings/regenerate.py`. Each is
+Fabric's intermediary mappings for the release composed with the official mappings
+`[[mappings.mojmap]]` already pins, restricted to the Minecraft types that appear in the signatures
+of the Carpet classes this mod imports. That is about twenty names per release rather than the
+whole game, because the classpath only has to agree about the types the two jars actually
+exchange — and a name that is missing is not silent, `javac` reports the `class_NNNN` it could not
+resolve. Adding a release means declaring its Carpet jar and its `[[mappings.mojmap]]` entry and
+re-running the script; it reads everything else out of `jals.toml`.
+
+### What is not there yet
+
+The jar every cell now produces carries **Mojang names**, which is what a plain Mixin launcher
+wants and not what Fabric wants: a Fabric mod is loaded through intermediary names, and its Mixin
+annotations are matched through a refmap Loom used to generate. Producing that artifact needs jals
+to remap the *output* into intermediary and to rewrite the Mixin targets with it; neither exists
+yet. So CI proves the whole build — feature routing, build script, SDK fetch → bundler → remap,
+Carpet deobfuscation, `#[cfg]` lowering, `javac`, packaging — for all fifteen releases, but only
+the 26.x jars are loadable as they come out.
+
+`[features] reobf` packages the classes under the release's official (obfuscated) names instead —
+the names the vanilla server itself uses, for a launcher that loads Mixins without Fabric.

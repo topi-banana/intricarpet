@@ -47,7 +47,7 @@ features = ["attributes"]
 
 # Reobfuscate the compiled classes with the release's official mappings before packaging. Off by
 # default, because a Fabric mod is loaded through *intermediary* names and jals cannot produce
-# those yet (see README §What jals does not do yet); with it on, the jar carries the names the
+# those yet (see README §What is not there yet); with it on, the jar carries the names the
 # vanilla server itself uses, which is what a plain Mixin launcher wants.
 reobf = []
 
