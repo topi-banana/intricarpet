@@ -70,6 +70,14 @@ build.metadata("minecraft-version", version);
 // `source`/`target`, because only `--release` also pins the platform API the mod may reach for.
 build.add_javac_arg("--release");
 build.add_javac_arg("" + java_release);
+// Mixin's jar registers an annotation processor in `META-INF/services`, so a `javac` that still
+// discovers processors on the class path starts it — where it immediately dies on the ASM it needs
+// and is not given (`NoClassDefFoundError: org/objectweb/asm/tree/MethodNode`). Nothing in this
+// build wants that processor: its job is the refmap, which is exactly what is not produced yet (see
+// README §What is not there yet). Measured against this project's own class path: JDK 16, 17 and 21
+// all start it and fail, and 25 does not look at all — so without this line "does the build work" is
+// a property of whichever JDK happened to be installed rather than of anything written down.
+build.add_javac_arg("-proc:none");
 build.add_javac_arg("-Xlint:deprecation");
 build.add_javac_arg("-Xlint:unchecked");
 if java_release <= 8 {
