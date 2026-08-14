@@ -73,23 +73,24 @@ reobf = []
 # own name into it, which is the whole of what selects a release.
 #
 # Carpet is one optional jar per release, activated by that release's feature (`dep:carpet-1.21.11`)
-# and inert otherwise, so a selection pulls exactly one Carpet down.
+# and inert otherwise, so a selection pulls exactly one Carpet down. On the thirteen obfuscated
+# releases it is deobfuscated on the way in — see `[[mappings.intermediary]]` below.
 [dependencies]
 minecraft = { git = "https://github.com/topi-banana/jals", branch = "main", dir = "examples/minecraft" }
 fabric-loader = { jar = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.18.4/fabric-loader-0.18.4.jar" }
-"carpet-1.17.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.17.1-1.4.57+v220119/fabric-carpet-1.17.1-1.4.57+v220119.jar", optional = true }
-"carpet-1.18.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.18.2-1.4.69+v220331/fabric-carpet-1.18.2-1.4.69+v220331.jar", optional = true }
-"carpet-1.19.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.2-1.4.84+v221018/fabric-carpet-1.19.2-1.4.84+v221018.jar", optional = true }
-"carpet-1.19.3" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.3-1.4.96+v230201/fabric-carpet-1.19.3-1.4.96+v230201.jar", optional = true }
-"carpet-1.19.4" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.4-1.4.100+v230314/fabric-carpet-1.19.4-1.4.100+v230314.jar", optional = true }
-"carpet-1.20.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.20-1.4.112+v230608/fabric-carpet-1.20-1.4.112+v230608.jar", optional = true }
-"carpet-1.20.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.20.2-1.4.119+v230928/fabric-carpet-1.20.2-1.4.119+v230928.jar", optional = true }
-"carpet-1.21.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21-1.4.147+v240613/fabric-carpet-1.21-1.4.147+v240613.jar", optional = true }
-"carpet-1.21.4" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.4-1.4.161+v241203/fabric-carpet-1.21.4-1.4.161+v241203.jar", optional = true }
-"carpet-1.21.5" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.5-1.4.169+v250325/fabric-carpet-1.21.5-1.4.169+v250325.jar", optional = true }
-"carpet-1.21.8" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.7-1.4.177+v250630/fabric-carpet-1.21.7-1.4.177+v250630.jar", optional = true }
-"carpet-1.21.10" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.10-1.4.188+v251016/fabric-carpet-1.21.10-1.4.188+v251016.jar", optional = true }
-"carpet-1.21.11" = { jar = "https://jitpack.io/com/github/gnembon/fabric-carpet/1.4.194/fabric-carpet-1.4.194.jar", optional = true }
+"carpet-1.17.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.17.1-1.4.57+v220119/fabric-carpet-1.17.1-1.4.57+v220119.jar", optional = true, remap = "intermediary" }
+"carpet-1.18.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.18.2-1.4.69+v220331/fabric-carpet-1.18.2-1.4.69+v220331.jar", optional = true, remap = "intermediary" }
+"carpet-1.19.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.2-1.4.84+v221018/fabric-carpet-1.19.2-1.4.84+v221018.jar", optional = true, remap = "intermediary" }
+"carpet-1.19.3" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.3-1.4.96+v230201/fabric-carpet-1.19.3-1.4.96+v230201.jar", optional = true, remap = "intermediary" }
+"carpet-1.19.4" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.4-1.4.100+v230314/fabric-carpet-1.19.4-1.4.100+v230314.jar", optional = true, remap = "intermediary" }
+"carpet-1.20.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.20-1.4.112+v230608/fabric-carpet-1.20-1.4.112+v230608.jar", optional = true, remap = "intermediary" }
+"carpet-1.20.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.20.2-1.4.119+v230928/fabric-carpet-1.20.2-1.4.119+v230928.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21-1.4.147+v240613/fabric-carpet-1.21-1.4.147+v240613.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.4" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.4-1.4.161+v241203/fabric-carpet-1.21.4-1.4.161+v241203.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.5" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.5-1.4.169+v250325/fabric-carpet-1.21.5-1.4.169+v250325.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.8" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.7-1.4.177+v250630/fabric-carpet-1.21.7-1.4.177+v250630.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.10" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.10-1.4.188+v251016/fabric-carpet-1.21.10-1.4.188+v251016.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.11" = { jar = "https://jitpack.io/com/github/gnembon/fabric-carpet/1.4.194/fabric-carpet-1.4.194.jar", optional = true, remap = "intermediary" }
 "carpet-26.1.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.1+v260401/fabric-carpet-26.1+v260401.jar", optional = true }
 "carpet-26.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.2+v260616/fabric-carpet-26.2+v260616.jar", optional = true }
 
@@ -108,6 +109,74 @@ resource-dirs = ["src/main/resources", "target/jals/build/rhai/out/resources"]
 # requires `reobf`, so the default selection activates none and the step packages without rewriting
 # a single name.
 remap = { with = "mojmap" }
+
+# The Carpet jar for an obfuscated release is *intermediary*-named while the game jar the SDK
+# puts beside it is Mojang-named, so the two cannot go on one classpath as published: `javac`
+# stops at the first Carpet signature that mentions a Minecraft type. `[dependencies] remap`
+# deobfuscates the jar before it reaches the classpath, and these are the mapping sets it reads
+# — one per release, each naming only that release, so exactly one is ever active.
+#
+# Each file is generated by `mappings/regenerate.py`, not hand-written: Fabric's intermediary
+# mappings for the release composed with the official mappings `[[mappings.mojmap]]` below
+# already pins, restricted to the Minecraft types that appear in the signatures of the Carpet
+# classes this mod imports. That is around twenty names per release rather than the whole game,
+# because the classpath only has to agree about the types the two jars actually exchange. A name
+# that is missing is not silent: `javac` reports the `class_NNNN` it could not resolve.
+#
+# 26.1 onward ships deobfuscated — Carpet and the game already speak the same names there — so
+# those two releases declare no `remap` and need none.
+
+[[mappings.intermediary]]
+required-features = ["1.17.1"]
+file = "mappings/intermediary-1.17.1.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.18.2"]
+file = "mappings/intermediary-1.18.2.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.19.2"]
+file = "mappings/intermediary-1.19.2.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.19.3"]
+file = "mappings/intermediary-1.19.3.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.19.4"]
+file = "mappings/intermediary-1.19.4.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.20.1"]
+file = "mappings/intermediary-1.20.1.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.20.2"]
+file = "mappings/intermediary-1.20.2.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.21.1"]
+file = "mappings/intermediary-1.21.1.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.21.4"]
+file = "mappings/intermediary-1.21.4.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.21.5"]
+file = "mappings/intermediary-1.21.5.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.21.8"]
+file = "mappings/intermediary-1.21.8.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.21.10"]
+file = "mappings/intermediary-1.21.10.txt"
+
+[[mappings.intermediary]]
+required-features = ["1.21.11"]
+file = "mappings/intermediary-1.21.11.txt"
 
 # One mapping set per release that ships obfuscated — 26.1 onward ships deobfuscated and Mojang
 # publishes no mappings for it, so those two releases name no alternative and need none. Each URL is
