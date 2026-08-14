@@ -80,31 +80,57 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # `java` is the JDK the cell installs; it is *not* the `--release` `build.rhai` passes.
+        # `javac` accepts any `--release` up to its own version, so a JDK covers every release at or
+        # below it and these fifteen cells need three JDKs rather than four: 1.17.1 asks for
+        # `--release 16` and gets it from JDK 17, which keeps CI off an end-of-life Temurin. Both
+        # numbers still have to move together — a release whose `java` is below its `--release`
+        # fails with `release version N not supported`, and one whose game jar is newer than its
+        # JDK fails reading the jar.
         include:
           - minecraft: "1.17.1"
+            java: "17"
           - minecraft: "1.18.2"
+            java: "17"
           - minecraft: "1.19.2"
+            java: "17"
           - minecraft: "1.19.3"
+            java: "17"
           - minecraft: "1.19.4"
+            java: "17"
           - minecraft: "1.20.1"
+            java: "17"
           - minecraft: "1.20.2"
+            java: "17"
           - minecraft: "1.21.1"
+            java: "21"
           - minecraft: "1.21.4"
+            java: "21"
           - minecraft: "1.21.5"
+            java: "21"
           - minecraft: "1.21.8"
+            java: "21"
           - minecraft: "1.21.10"
+            java: "21"
           - minecraft: "1.21.11"
+            java: "21"
           - minecraft: "26.1.2"
+            java: "25"
           - minecraft: "26.2"
+            java: "25"
     steps:
       - uses: actions/checkout@v7
 
-      # `jals build` shells out to `javac`, and the newest release compiles at `--release 25`.
-      - name: Set up JDK 25
+      # `jals build` shells out to `javac`, and this is what puts one where jals looks: the action
+      # exports `$JAVA_HOME`, and jals' default `[toolchain]` resolution is `$JAVAC`, then
+      # `$JAVA_HOME/bin`, then `PATH` — so with no `$JAVAC` set, this step decides. The version is
+      # the cell's own, so each release is compiled by a JDK of its own era rather than by whichever
+      # one the whole matrix happened to share.
+      - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "25"
+          java-version: ${{ matrix.java }}
 
       # Only the source fallback needs this; a released `jals` is a download. It is unconditional
       # because `JALS_VERSION` is what decides, and a step whose `if` restates that decision is a

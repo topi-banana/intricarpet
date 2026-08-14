@@ -38,6 +38,15 @@ jals lint  --features 26.2
 jals fmt $(git ls-files -- '*.java')  # no --features: one answer for the whole tree
 ```
 
+`jals build` shells out to `javac`, and *which* `javac` is the ordinary system resolution — `$JAVAC`,
+then `$JAVA_HOME/bin`, then `PATH`. The JDK has to be at least the release the selection compiles at
+(`--release 16` for 1.17.1 through `--release 25` for 26.x, derived in `build.rhai`), and may be
+newer: one JDK 25 builds all fifteen. CI installs one per era instead — 17, 21 or 25, chosen by the
+cell — so a release is compiled by a JDK no newer than it has to be. Three rather than four, because
+`--release 16` needs a JDK 16 no more than it needs a JDK 25, and 17 keeps CI off an end-of-life
+Temurin. `$JAVAC` wins over everything else, so overriding the JDK for one build is
+`JAVAC=/path/to/jdk-17/bin/javac jals build --features 1.17.1`.
+
 The tree is formatted by `jals fmt`'s own defaults. There is no `jalsfmt.toml`, which is the point:
 the defaults are the rule set, so the `jals` a contributor runs is the whole specification, and CI
 checks it with `jals fmt --check` over the tracked `.java` files. `jals fmt` reads `jals.toml` — not
