@@ -6,6 +6,7 @@ on:
     paths:
       - "src/**"
       - "templates/**"
+      - "mappings/**"
       - "jals.toml"
       - "build.rhai"
       - ".github/workflows/**"
@@ -93,12 +94,8 @@ jobs:
           - minecraft: "1.21.8"
           - minecraft: "1.21.10"
           - minecraft: "1.21.11"
-          # The two unobfuscated releases. Only these two can reach a finished jar today — see
-          # `compile` below and README §What is not there yet.
           - minecraft: "26.1.2"
-            compile: true
           - minecraft: "26.2"
-            compile: true
     steps:
       - uses: actions/checkout@v7
 
@@ -129,24 +126,20 @@ jobs:
           version: ${{ env.JALS_VERSION }}
 
       # Fetches the game jar, unwraps the bundler, remaps it with the official mappings, fetches
-      # Carpet and the loader, renders the two resource templates, compiles and packages.
+      # Carpet and the loader, deobfuscates Carpet on the obfuscated releases (`[dependencies]
+      # remap`, against the generated `mappings/intermediary-*.txt`), renders the two resource
+      # templates, compiles and packages.
       #
-      # `continue-on-error` on the obfuscated releases is not a green light: jals has no
-      # intermediary (Tiny v2) mappings yet, so Carpet's intermediary-named jar and the
-      # Mojang-named game jar cannot be put on one classpath and `javac` stops there. The step
-      # still runs, because everything before `javac` — the feature routing, the build script, the
-      # SDK's fetch/remap, the `#[cfg]` lowering — is real work this catches regressions in, and
-      # the log says exactly how far it got. The `lint` job below is the gate that does hold for
-      # every release.
+      # Every cell has to reach a jar. This step carried `continue-on-error` on the thirteen
+      # obfuscated releases while Carpet's intermediary-named jar and the Mojang-named game jar
+      # could not share a classpath; now that the `remap` above reconciles them, an error here is a
+      # real regression and fails the run.
       - name: Build
-        id: build
-        continue-on-error: ${{ !matrix.compile }}
         env:
           JALS_BUILD_ID: ${{ github.run_number }}
         run: jals build --features "${{ matrix.minecraft }}"
 
       - name: Upload the jar
-        if: matrix.compile
         uses: actions/upload-artifact@v7
         with:
           name: intricarpet-mc${{ matrix.minecraft }}
