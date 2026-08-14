@@ -35,11 +35,14 @@ cargo install --git https://github.com/topi-banana/jals jals-cli
 
 jals build --features 26.2          # -> target/jals/remap/intricarpet-2.0.7.jar
 jals lint  --features 26.2
+jals fmt $(git ls-files -- '*.java')  # no --features: one answer for the whole tree
 ```
 
-`jals fmt` is not part of the build: the mod keeps its own Allman-brace, two-space style, and the
-formatter renders google-java-format. Reformatting the tree is a change worth making on its own
-terms rather than as a side effect of dropping Gradle.
+The tree is formatted by `jals fmt`'s own defaults. There is no `jalsfmt.toml`, which is the point:
+the defaults are the rule set, so the `jals` a contributor runs is the whole specification, and CI
+checks it with `jals fmt --check` over the tracked `.java` files. `jals fmt` reads `jals.toml` — not
+for a release, but for the one rule that would write dialect syntax — and never resolves a name, so
+it needs neither a JDK nor a game jar.
 
 Exactly one version feature must be selected — there is deliberately no default, because a release
 chooses the game jar, the Carpet jar and every conditional branch at once. The supported releases
@@ -59,10 +62,16 @@ Now the source says it directly, in the jals dialect:
 
 ```java
 #[cfg(feature = "since-1.21.5")]
-@Shadow private static double euclideanDistanceSquared(ChunkPos chunkPos, Vec3 vec){return 0.0;}
+@Shadow
+private static double euclideanDistanceSquared(ChunkPos chunkPos, Vec3 vec) {
+    return 0.0;
+}
 
 #[cfg(not(feature = "since-1.21.5"))]
-@Shadow private static double euclideanDistanceSquared(ChunkPos chunkPos, Entity entity){return 0.0;}
+@Shadow
+private static double euclideanDistanceSquared(ChunkPos chunkPos, Entity entity) {
+    return 0.0;
+}
 ```
 
 Every branch is *live source*: it is parsed, formatted and navigable in an editor whichever release

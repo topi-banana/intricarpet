@@ -156,12 +156,42 @@ jobs:
           version: ${{ env.JALS_VERSION }}
       # Tracked files only: nothing under `target/` is authored, and neither is anything a build
       # script publishes into a source root.
-      #
-      # No `jals fmt --check`: the mod is written in its own Allman-brace, two-space style, and
-      # `jals fmt` renders google-java-format. Reformatting the tree is a change worth making on
-      # its own terms, not a side effect of dropping Gradle.
       - name: Lint every selection
         run: |
           mapfile -t sources < <(git ls-files -- '*.java')
           printf 'checking %s\n' "${sources[@]}"
           jals lint --features "${{ matrix.minecraft }}" "${sources[@]}"
+
+  fmt:
+    # One job, not a matrix: `jals fmt` has no `--features`. Formatting is a CST operation over the
+    # text as written — every `#[cfg]` branch is live source in every selection, so there is one
+    # answer for the whole tree and fifteen copies of it would be fifteen identical runs.
+    #
+    # The tree is formatted by `jals fmt`'s own defaults, with no `jalsfmt.toml` to override them.
+    # That is what makes `JALS_VERSION` the whole specification of this check: it names the rule set
+    # as much as it names the binary.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ env.JALS_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+      # No JDK and no game jar: the formatter never resolves a name. It does read `jals.toml`, for
+      # the one rule that would write dialect syntax (`[imports] granularity`) and must not unless
+      # `grouped-imports` is on.
+      #
+      # Tracked files only, for the same reason as `lint` above. `--check` writes nothing, prints
+      # the diff it would have written, and fails — on a file that would change, and equally on one
+      # the formatter's fail-safe returned unchanged, since either answers "no" to "is every file
+      # already formatted".
+      - name: Check formatting
+        run: |
+          mapfile -t sources < <(git ls-files -- '*.java')
+          jals fmt --check "${sources[@]}"
