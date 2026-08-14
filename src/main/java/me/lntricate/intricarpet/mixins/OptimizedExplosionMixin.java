@@ -50,7 +50,13 @@ public class OptimizedExplosionMixin {
         Entity explodingEntity,
         int k2,
         Entity entity) {
-        if (Rules.optimizedTNTEdgeCases || !entity.isOnGround()) {
+        // `Entity#isOnGround` is `onGround` in the official mappings from 1.20 until 26.1 renamed it
+        // back. `since-1.20` alone is the whole band here: this method only exists under the
+        // `not(since-26)` above, so the releases that would answer the predicate the other way are
+        // not compiling this line at all.
+        #[cfg(feature = "since-1.20")] boolean grounded = entity.onGround();
+        #[cfg(not(feature = "since-1.20"))] boolean grounded = entity.isOnGround();
+        if (Rules.optimizedTNTEdgeCases || !grounded) {
             Vec3 vel = entity.getDeltaMovement();
             entity.setDeltaMovement(vel.x, vel.y - SAME_POSITION_VELOCITY, vel.z);
         }
