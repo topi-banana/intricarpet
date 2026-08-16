@@ -26,7 +26,18 @@ env:
   # compiles with `cargo install` — hence the Rust toolchain and the tool-cache restore below.
   # Pinning it here rather than per job is what keeps the whole matrix on one toolchain; the
   # `jals` job below turns it into the commit the tool cache is actually keyed on.
-  JALS_VERSION: main
+  #
+  # Not `main`: `[build] remap` resolves a member declared on a supertype only if the type
+  # declaring it is in the class index, and the game jar reaches jals as a build-task artifact
+  # rather than as a declared dependency, so on `main` it is not. Every jar this matrix builds
+  # would come out with `getUUID` and its like still spelled the way the source spells them, and
+  # the check below would fail all thirteen obfuscated cells.
+  #
+  # jals#251 is that fix, and this is its head *commit* rather than its branch name: merging the
+  # pull request deletes the branch, and the resolve job below fails outright on a ref that no
+  # longer exists. A commit stays resolvable, so moving this back to `main` afterwards is a
+  # cleanup rather than a repair.
+  JALS_VERSION: 9d59b3d947e3cf0e546e5e2b69e0958dd0b0a130
 
 jobs:
   jals:
@@ -153,8 +164,9 @@ jobs:
 
       # Fetches the game jar, unwraps the bundler, remaps it with the official mappings, fetches
       # Carpet and the loader, deobfuscates Carpet on the obfuscated releases (`[dependencies]
-      # remap`, against the generated `mappings/intermediary-*.txt`), renders the two resource
-      # templates, compiles and packages.
+      # remap`, against the generated `mappings/intermediary-*.tiny`), renders the two resource
+      # templates, compiles, packages, and rewrites the packaged classes into intermediary names
+      # with the same mapping set read the other way round.
       #
       # Every cell has to reach a jar. This step carried `continue-on-error` on the thirteen
       # obfuscated releases while Carpet's intermediary-named jar and the Mojang-named game jar
@@ -164,6 +176,13 @@ jobs:
         env:
           JALS_BUILD_ID: ${{ github.run_number }}
         run: jals build --features "${{ matrix.minecraft }}"
+
+      # The step above cannot fail on an incomplete mapping set: a remapper leaves what it cannot
+      # rename, so a name the set misses produces a jar that builds, uploads and dies at the first
+      # reference. This is the assertion that the jar is actually loadable — see
+      # `mappings/check-remap.py` for what it reads and what it deliberately does not.
+      - name: Check the jar is intermediary-named
+        run: python3 mappings/check-remap.py "${{ matrix.minecraft }}" target/jals/remap/*.jar
 
       - name: Upload the jar
         uses: actions/upload-artifact@v7
