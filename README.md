@@ -167,10 +167,12 @@ at apply time even though every reference in its bytecode is correct. `mappings/
 skips annotations for exactly this reason: the known gap would drown the signal it is there to
 give. **The 26.x jars are the loadable ones today.**
 
-**The remap hierarchy.** `[build] remap` finds a member on a supertype only if the type declaring
-it is in the class index jals builds from the compile classpath, and the game jar arrives there as
-a build-task artifact rather than as a declared dependency. jals [#251] closes that; without it
-`getUUID` and the like come back out of the remap still spelled the way the source spells them —
-which the check above catches, so this is a red build rather than a broken jar.
+That is the whole list. The other half of the reobfuscation — a member declared on a supertype,
+where `[build] remap` finds it only if the declaring type is in the class index jals builds from
+the compile classpath, and the game jar arrives there as a build-task artifact rather than as a
+declared dependency — was jals [#251], and it is on `main`. It is named here because it is the
+reason this repository's `JALS_VERSION` cannot go below it: an older jals returns `getUUID` and its
+like still spelled the way the source spells them, which `mappings/check-remap.py` turns into a red
+build rather than a broken jar.
 
 [#251]: https://github.com/topi-banana/jals/pull/251

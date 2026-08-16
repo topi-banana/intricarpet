@@ -26,18 +26,7 @@ env:
   # compiles with `cargo install` — hence the Rust toolchain and the tool-cache restore below.
   # Pinning it here rather than per job is what keeps the whole matrix on one toolchain; the
   # `jals` job below turns it into the commit the tool cache is actually keyed on.
-  #
-  # Not `main`: `[build] remap` resolves a member declared on a supertype only if the type
-  # declaring it is in the class index, and the game jar reaches jals as a build-task artifact
-  # rather than as a declared dependency, so on `main` it is not. Every jar this matrix builds
-  # would come out with `getUUID` and its like still spelled the way the source spells them, and
-  # the check below would fail all thirteen obfuscated cells.
-  #
-  # jals#251 is that fix, and this is its head *commit* rather than its branch name: merging the
-  # pull request deletes the branch, and the resolve job below fails outright on a ref that no
-  # longer exists. A commit stays resolvable, so moving this back to `main` afterwards is a
-  # cleanup rather than a repair.
-  JALS_VERSION: 9d59b3d947e3cf0e546e5e2b69e0958dd0b0a130
+  JALS_VERSION: main
 
 jobs:
   jals:

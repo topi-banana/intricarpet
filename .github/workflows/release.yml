@@ -14,10 +14,8 @@ permissions:
   contents: write
 
 env:
-  # Kept in step with `ci.yml`, including why it is jals#251's head commit rather than `main` or a
-  # branch name — see the comment there. A release built by a jals without that fix would attach
-  # thirteen jars whose inherited member references were never renamed.
-  JALS_VERSION: 9d59b3d947e3cf0e546e5e2b69e0958dd0b0a130
+  # Kept in step with `ci.yml` — see the comment there.
+  JALS_VERSION: main
 
 jobs:
   jals:
