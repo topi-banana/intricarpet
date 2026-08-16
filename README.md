@@ -36,6 +36,9 @@ cargo install --git https://github.com/topi-banana/jals jals-cli
 jals build --features 26.2          # -> target/jals/remap/intricarpet-2.0.7.jar
 jals lint  --features 26.2
 jals fmt $(git ls-files -- '*.java')  # no --features: one answer for the whole tree
+
+# On the thirteen obfuscated releases, assert the jar carries the names Fabric loads it through.
+python3 mappings/check-remap.py 1.21.11 target/jals/remap/intricarpet-2.0.7.jar
 ```
 
 `jals build` shells out to `javac`, and *which* `javac` is the ordinary system resolution — `$JAVAC`,
@@ -113,40 +116,61 @@ package-private call — is a Mixin `@Invoker` accessor
 | `versions/*/intricarpet.accesswidener`            | `ChunkMapAccessor`, a Mixin `@Invoker`                                  |
 | Loom: fetch / bundler / remap / Mixin classpath   | `[dependencies] minecraft`, jals' Minecraft SDK                         |
 | `modImplementation` Carpet, `fabric-loader`       | `[dependencies]`, one optional Carpet jar per release                   |
-| Loom remapping Carpet to the project's namespace  | `[dependencies] remap` over `mappings/intermediary-*.txt`               |
+| Loom remapping Carpet to the project's namespace  | `[dependencies] remap` over `mappings/intermediary-*.tiny`              |
+| `remapJar`, the intermediary-named output         | `[build] remap`, the same files read the other way round                |
 | `processResources { expand … }`                   | `templates/*.json` rendered by `build.rhai`                             |
 | `JavaCompile { options … }`, `sourceCompatibility`| `build.add_javac_arg` in `build.rhai`                                   |
 | `buildAndGather`, the matrix workflows            | one `--features` matrix in `.github/workflows/ci.yml`                   |
 
-### How Carpet gets onto the classpath
+### Three namespaces, one mapping file per release
 
-26.1 onward ships deobfuscated: the game jar, Carpet and the mod all speak the same names, which is
-why the old Gradle build applied plain `fabric-loom` there and `fabric-loom-remap` everywhere else.
+26.1 onward ships deobfuscated: the game jar, Carpet, the mod and the runtime all speak the same
+names, which is why the old Gradle build applied plain `fabric-loom` there and `fabric-loom-remap`
+everywhere else. Nothing below applies to those two releases — they declare no mapping set, and
+both remap steps are no-ops.
 
-For 1.17.1 through 1.21.11 the mod compiles against Mojang-named game classes while the Carpet
-release jar is *intermediary*-named, so as published the two cannot share a classpath — `javac`
-stops at the first Carpet API whose signature mentions a Minecraft type. `[dependencies] remap`
-closes that: it deobfuscates the Carpet jar before it reaches the classpath, against one
-`[[mappings.intermediary]]` alternative per release.
+For 1.17.1 through 1.21.11 three namespaces meet, and the build has to reconcile them twice.
 
-Those mapping files are generated rather than written, by `mappings/regenerate.py`. Each is
-Fabric's intermediary mappings for the release composed with the official mappings
-`[[mappings.mojmap]]` already pins, restricted to the Minecraft types that appear in the signatures
-of the Carpet classes this mod imports. That is about twenty names per release rather than the
-whole game, because the classpath only has to agree about the types the two jars actually
-exchange — and a name that is missing is not silent, `javac` reports the `class_NNNN` it could not
-resolve. Adding a release means declaring its Carpet jar and its `[[mappings.mojmap]]` entry and
-re-running the script; it reads everything else out of `jals.toml`.
+**Going in.** The mod compiles against Mojang-named game classes, while the Carpet release jar is
+*intermediary*-named. As published the two cannot share a classpath: `javac` stops at the first
+Carpet API whose signature mentions a Minecraft type. `[dependencies] remap` deobfuscates the
+Carpet jar before it reaches the classpath.
+
+**Coming out.** Fabric loads a mod through intermediary names, so the packaged classes cannot stay
+Mojang-named — that is precisely the jar that throws `NoClassDefFoundError:
+net/minecraft/commands/Commands` on world load. `[build] remap` rewrites them.
+
+Those are one table read in two directions, so they are one `[[mappings.intermediary]]` alternative
+per release rather than two. That is what the tiny v2 format buys: a tiny file names its namespaces
+in a header, so `format = { type = "tiny-v2", from = "intermediary", to = "mojang" }` states which
+renaming is meant, and each step reads it the way it needs. A ProGuard-style file could not — it
+names one pair implicitly and is read in whichever direction the step hardcodes.
+
+The files are generated rather than written, by `mappings/regenerate.py`: Fabric's intermediary
+mappings for the release composed with the official mappings Mojang publishes for it. Neither half
+is the whole game — the script's docstring says what it keeps — and neither omission is silent. A
+missing Carpet type stops `javac` on the `class_NNNN` it could not resolve; a missing name of the
+mod's own is what `mappings/check-remap.py` fails CI on, because a remapper leaves what it cannot
+rename and would otherwise ship a jar that builds and dies at the first reference. Adding a release
+means declaring its Carpet jar with `remap = "intermediary"`, adding its `[[mappings.intermediary]]`
+alternative and re-running the script; it reads everything else out of `jals.toml` and Mojang's
+version manifest.
 
 ### What is not there yet
 
-The jar every cell now produces carries **Mojang names**, which is what a plain Mixin launcher
-wants and not what Fabric wants: a Fabric mod is loaded through intermediary names, and its Mixin
-annotations are matched through a refmap Loom used to generate. Producing that artifact needs jals
-to remap the *output* into intermediary and to rewrite the Mixin targets with it; neither exists
-yet. So CI proves the whole build — feature routing, build script, SDK fetch → bundler → remap,
-Carpet deobfuscation, `#[cfg]` lowering, `javac`, packaging — for all fifteen releases, but only
-the 26.x jars are loadable as they come out.
+**Mixin's own strings.** `@Inject(method = "checkFallDamage")`, `@At(target = "L…;fallOn(…)V")`,
+`@Shadow`, `@Invoker("forEachBlockTickingChunk")` — every one of those names a Minecraft member as
+a `String` or as a Java declaration, and none of them is remapped. Loom answered this with a
+*refmap*, a side table its annotation processor generated; jals produces neither the refmap nor the
+rewrite, so on the thirteen obfuscated releases Mixin cannot resolve its targets and the mod fails
+at apply time even though every reference in its bytecode is correct. `mappings/check-remap.py`
+skips annotations for exactly this reason: the known gap would drown the signal it is there to
+give. **The 26.x jars are the loadable ones today.**
 
-`[features] reobf` packages the classes under the release's official (obfuscated) names instead —
-the names the vanilla server itself uses, for a launcher that loads Mixins without Fabric.
+**The remap hierarchy.** `[build] remap` finds a member on a supertype only if the type declaring
+it is in the class index jals builds from the compile classpath, and the game jar arrives there as
+a build-task artifact rather than as a declared dependency. jals [#251] closes that; without it
+`getUUID` and the like come back out of the remap still spelled the way the source spells them —
+which the check above catches, so this is a red build rather than a broken jar.
+
+[#251]: https://github.com/topi-banana/jals/pull/251
