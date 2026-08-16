@@ -1,0 +1,4 @@
+# `mappings/regenerate.py` writes these; nobody edits one. Marking them generated collapses them
+# in a review and keeps them out of the language statistics, and marking them non-diffable keeps a
+# release bump from printing a few thousand renamed lines nobody can read.
+mappings/*.tiny linguist-generated=true -diff
