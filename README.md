@@ -39,6 +39,9 @@ jals fmt $(git ls-files -- '*.java')  # no --features: one answer for the whole 
 
 # On the thirteen obfuscated releases, assert the jar carries the names Fabric loads it through.
 python3 mappings/check-remap.py 1.21.11 target/jals/remap/intricarpet-2.0.7.jar
+
+# And that the refmaps still say what the source does — no network, no toolchain, all thirteen.
+python3 mappings/regenerate.py --check
 ```
 
 `jals build` shells out to `javac`, and *which* `javac` is the ordinary system resolution — `$JAVAC`,
@@ -118,6 +121,7 @@ package-private call — is a Mixin `@Invoker` accessor
 | `modImplementation` Carpet, `fabric-loader`       | `[dependencies]`, one optional Carpet jar per release                   |
 | Loom remapping Carpet to the project's namespace  | `[dependencies] remap` over `mappings/intermediary-*.tiny`              |
 | `remapJar`, the intermediary-named output         | `[build] remap`, the same files read the other way round                |
+| The Mixin annotation processor's refmap           | `mappings/refmap-*.json`, derived from those same files                 |
 | `processResources { expand … }`                   | `templates/*.json` rendered by `build.rhai`                             |
 | `JavaCompile { options … }`, `sourceCompatibility`| `build.add_javac_arg` in `build.rhai`                                   |
 | `buildAndGather`, the matrix workflows            | one `--features` matrix in `.github/workflows/ci.yml`                   |
@@ -156,23 +160,51 @@ means declaring its Carpet jar with `remap = "intermediary"`, adding its `[[mapp
 alternative and re-running the script; it reads everything else out of `jals.toml` and Mojang's
 version manifest.
 
-### What is not there yet
-
-**Mixin's own strings.** `@Inject(method = "checkFallDamage")`, `@At(target = "L…;fallOn(…)V")`,
-`@Shadow`, `@Invoker("forEachBlockTickingChunk")` — every one of those names a Minecraft member as
-a `String` or as a Java declaration, and none of them is remapped. Loom answered this with a
-*refmap*, a side table its annotation processor generated; jals produces neither the refmap nor the
-rewrite, so on the thirteen obfuscated releases Mixin cannot resolve its targets and the mod fails
-at apply time even though every reference in its bytecode is correct. `mappings/check-remap.py`
-skips annotations for exactly this reason: the known gap would drown the signal it is there to
-give. **The 26.x jars are the loadable ones today.**
-
-That is the whole list. The other half of the reobfuscation — a member declared on a supertype,
-where `[build] remap` finds it only if the declaring type is in the class index jals builds from
-the compile classpath, and the game jar arrives there as a build-task artifact rather than as a
-declared dependency — was jals [#251], and it is on `main`. It is named here because it is the
-reason this repository's `JALS_VERSION` cannot go below it: an older jals returns `getUUID` and its
-like still spelled the way the source spells them, which `mappings/check-remap.py` turns into a red
-build rather than a broken jar.
+The other half of the reobfuscation — a member declared on a supertype, where `[build] remap` finds
+it only if the declaring type is in the class index jals builds from the compile classpath, and the
+game jar arrives there as a build-task artifact rather than as a declared dependency — was jals
+[#251], and it is on `main`. It is named here because it is the reason this repository's
+`JALS_VERSION` cannot go below it: an older jals returns `getUUID` and its like still spelled the way
+the source spells them, which `mappings/check-remap.py` turns into a red build rather than a broken
+jar.
 
 [#251]: https://github.com/topi-banana/jals/pull/251
+
+### Mixin's own strings
+
+Rewriting the bytecode is most of what a mixin needs. A `@Mixin(Entity.class)` target is a `Type` in
+the annotation, every call and field access is a constant-pool reference, and `[build] remap` turns
+all of it `class_1297`-shaped along with the rest of the jar. Two things in a mixin are not
+references, and each needs its own answer.
+
+**Selectors, read at apply time.** `@Inject(method = "checkFallDamage")`, `@At(target =
+"L…;fallOn(…)V")`, `@Invoker("forEachBlockTickingChunk")` — annotation *elements*, which is to say
+`String`s, which a remapper has no business rewriting. Mixin resolves them when it applies the mixin,
+against a game that has never heard of `checkFallDamage`. Its own answer is a **refmap**: a side
+table from the string as written to the string as it should be read. `mappings/regenerate.py`
+generates one per release beside the mapping set it derives it from, and `build.rhai` names it in
+`intricarpet.mixins.json` on the thirteen obfuscated releases — and leaves the key out on 26.x, where
+the source's names already are the runtime's.
+
+Loom got its refmap from the Mixin annotation processor. This build does not, and could not: the
+processor on the classpath here is SpongePowered's own, which reads SRG and TSRG and has never heard
+of a tiny file. Loom's tiny support was `fabric-mixin-compile-extensions`, a Loom artifact. Deriving
+the table from the mapping set is both smaller and checkable, which is what `--check` below is.
+
+**`@Shadow`.** Not read out of the annotation at all. `MixinPreProcessorStandard` looks the member up
+by the name the mixin class *declares* and never consults a refmap for it, so the name has to be
+right in the bytecode — which makes this a mapping-set entry rather than a refmap one. The mixin
+class gets an identity class line and a copy of its target's mapping for the member it shadows, and
+`[build] remap` then renames the declaration and every use of it exactly as it renames a Minecraft
+member. `ChunkMapMixin`'s `playerMap` comes out `field_18241`, which is what Loom's remapper did to
+Carpet's own shadows.
+
+`mappings/check-remap.py` sees neither half: it skips annotations whole, and a declaration's own name
+is not a reference for it to check. The cover for both is
+
+```sh
+python3 mappings/regenerate.py --check
+```
+
+which re-derives every refmap from the committed mapping sets and the source tree and fails on a tree
+that has moved on from them. It needs no network, no JDK and no jals, and CI runs it as its own job.
