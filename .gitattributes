@@ -2,3 +2,8 @@
 # in a review and keeps them out of the language statistics, and marking them non-diffable keeps a
 # release bump from printing a few thousand renamed lines nobody can read.
 mappings/*.tiny linguist-generated=true -diff
+
+# The refmaps come out of the same script and are equally not hand-edited, but one is twenty lines
+# rather than several thousand and every line in it is a name a reviewer can check against the
+# source. Generated, and deliberately still diffable.
+mappings/refmap-*.json linguist-generated=true

@@ -15,8 +15,10 @@ list of what a Mojang-shaped name is still allowed to be:
   * a member it maps onto a name Fabric left obfuscated — `below` → `m`, a synthetic bridge
 
 Two things it deliberately does not look at. **Annotations** are skipped whole: Mixin's `method =`
-and `target =` strings are still Mojang-named, which needs a refmap nobody generates yet, and
-skipping the attribute is what keeps that known gap from drowning this signal. **Superseded
+and `target =` strings stay Mojang-named in the jar by design — they are annotation elements, which
+a remapper has no business rewriting, and Mixin reads them at apply time through the refmap
+`regenerate.py` generates beside this mapping set. `python3 mappings/regenerate.py --check` is what
+covers them; a Mojang-shaped name inside an attribute is not this check's to report. **Superseded
 constant-pool entries** are not read, because they are not reachable: a rename interns a new `Utf8`
 and repoints the entry at it, so the old string survives in the pool of a perfectly remapped class.
 Class and reference entries are read from the pool anyway — those the remapper rewrites in place,

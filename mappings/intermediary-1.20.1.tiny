@@ -24,8 +24,6 @@ c	com/mojang/blaze3d/pipeline/RenderTarget	net/minecraft/class_276
 	m	(Z)V	clear	method_1230
 c	com/mojang/blaze3d/platform/GlStateManager$BooleanState	com/mojang/blaze3d/platform/GlStateManager$class_1018
 	f	I	state	field_5050
-c	com/mojang/blaze3d/platform/GlStateManager$LogicOp	com/mojang/blaze3d/platform/GlStateManager$class_1030
-	f	I	value	field_5108
 c	com/mojang/blaze3d/platform/GlStateManager$Viewport	com/mojang/blaze3d/platform/GlStateManager$class_1040
 	f	I	x	field_5172
 	f	I	y	field_5171
@@ -35,7 +33,6 @@ c	com/mojang/blaze3d/platform/InputConstants	net/minecraft/class_3675
 	m	(II)Lcom/mojang/blaze3d/platform/InputConstants$Key;	getKey	method_15985
 	m	(Ljava/lang/String;)Lcom/mojang/blaze3d/platform/InputConstants$Key;	getKey	method_15981
 c	com/mojang/blaze3d/platform/InputConstants$Key	net/minecraft/class_3675$class_306
-	f	I	value	field_1665
 	f	Ljava/lang/String;	name	field_1663
 	m	()I	getValue	method_1444
 	m	()Lcom/mojang/blaze3d/platform/InputConstants$Type;	getType	method_1442
@@ -139,8 +136,6 @@ c	com/mojang/realmsclient/client/Request	net/minecraft/class_4346
 c	com/mojang/realmsclient/dto/Backup	net/minecraft/class_4867
 	f	J	size	field_22571
 	f	Ljava/util/Map;	metadata	field_22572
-c	com/mojang/realmsclient/dto/Ops	net/minecraft/class_4870
-	f	Ljava/util/Set;	ops	field_22579
 c	com/mojang/realmsclient/dto/PlayerInfo	net/minecraft/class_4874
 	f	Ljava/lang/String;	name	field_22590
 	m	()Ljava/lang/String;	getName	method_25042
@@ -165,8 +160,6 @@ c	com/mojang/realmsclient/gui/RealmsWorldSlotButton	net/minecraft/class_4367
 	m	()V	tick	method_37007
 c	com/mojang/realmsclient/gui/RowButton	net/minecraft/class_4371
 	m	()I	getRight	method_21109
-c	com/mojang/realmsclient/gui/screens/RealmsBackupInfoScreen$BackupInfoListEntry	net/minecraft/class_4379$class_5344
-	f	Ljava/lang/String;	value	field_25259
 c	com/mojang/realmsclient/gui/screens/RealmsConfirmScreen	net/minecraft/class_4389
 	f	Lit/unimi/dsi/fastutil/booleans/BooleanConsumer;	callback	field_22692
 c	com/mojang/realmsclient/gui/screens/RealmsCreateRealmScreen	net/minecraft/class_4390
@@ -192,14 +185,8 @@ c	com/mojang/realmsclient/gui/screens/RealmsSelectWorldTemplateScreen$WorldTempl
 	m	(I)Lcom/mojang/realmsclient/dto/WorldTemplate;	get	method_21447
 c	com/mojang/realmsclient/gui/screens/RealmsUploadScreen	net/minecraft/class_4427
 	f	Ljava/lang/Runnable;	callback	field_22728
-c	com/mojang/realmsclient/gui/task/DataFetcher$ComputationResult	net/minecraft/class_7581$class_7582
-	f	Lcom/mojang/datafixers/util/Either;	value	comp_888
-	m	()Lcom/mojang/datafixers/util/Either;	value	comp_888
 c	com/mojang/realmsclient/gui/task/DataFetcher$Subscription	net/minecraft/class_7581$class_7584
 	m	()V	tick	method_44636
-c	com/mojang/realmsclient/gui/task/DataFetcher$SuccessfulComputationResult	net/minecraft/class_7581$class_7585
-	f	Ljava/lang/Object;	value	comp_890
-	m	()Ljava/lang/Object;	value	comp_890
 c	com/mojang/realmsclient/util/LevelType	net/minecraft/class_5672
 	f	Lnet/minecraft/network/chat/Component;	name	field_27949
 	m	()Lnet/minecraft/network/chat/Component;	getName	method_32506
@@ -221,11 +208,17 @@ c	com/mojang/realmsclient/util/task/SwitchSlotTask	net/minecraft/class_4443
 	f	Ljava/lang/Runnable;	callback	field_22733
 c	com/mojang/realmsclient/util/task/WorldCreationTask	net/minecraft/class_4445
 	f	Ljava/lang/String;	name	field_20249
+c	me/lntricate/intricarpet/mixins/interactions/ChunkMapMixin	me/lntricate/intricarpet/mixins/interactions/ChunkMapMixin
+	f	Lnet/minecraft/server/level/PlayerMap;	playerMap	field_18241
+	m	(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/entity/Entity;)D	euclideanDistanceSquared	method_18704
+c	me/lntricate/intricarpet/mixins/interactions/ServerChunkCacheMixin	me/lntricate/intricarpet/mixins/interactions/ServerChunkCacheMixin
+	f	Lnet/minecraft/server/level/ChunkMap;	chunkMap	field_17254
+c	me/lntricate/intricarpet/mixins/interactions/ServerGamePacketListenerImplMixin	me/lntricate/intricarpet/mixins/interactions/ServerGamePacketListenerImplMixin
+	f	Lnet/minecraft/server/level/ServerPlayer;	player	field_14140
 c	net/minecraft/ChatFormatting	net/minecraft/class_124
 	f	Ljava/lang/String;	name	field_1057
 	m	()Ljava/lang/String;	getName	method_537
 c	net/minecraft/CrashReportCategory$Entry	net/minecraft/class_129$class_130
-	f	Ljava/lang/String;	value	field_1099
 	m	()Ljava/lang/String;	getKey	method_588
 	m	()Ljava/lang/String;	getValue	method_587
 c	net/minecraft/DefaultUncaughtExceptionHandler	net/minecraft/class_140
@@ -276,9 +269,7 @@ c	net/minecraft/advancements/critereon/BeeNestDestroyedTrigger$TriggerInstance	n
 	f	Lnet/minecraft/advancements/critereon/ItemPredicate;	item	field_21570
 	f	Lnet/minecraft/world/level/block/Block;	block	field_21569
 c	net/minecraft/advancements/critereon/BlockPredicate	net/minecraft/class_4550
-	f	Ljava/util/Set;	blocks	field_20694
 c	net/minecraft/advancements/critereon/BlockPredicate$Builder	net/minecraft/class_4550$class_4710
-	f	Ljava/util/Set;	blocks	field_21572
 	m	()Lnet/minecraft/advancements/critereon/BlockPredicate$Builder;	block	method_23880
 	m	(Ljava/lang/Iterable;)Lnet/minecraft/advancements/critereon/BlockPredicate$Builder;	of	method_37214
 	m	(Lnet/minecraft/tags/TagKey;)Lnet/minecraft/advancements/critereon/BlockPredicate$Builder;	of	method_29233
@@ -361,8 +352,6 @@ c	net/minecraft/advancements/critereon/SlideDownBlockTrigger$TriggerInstance	net
 c	net/minecraft/advancements/critereon/SlimePredicate	net/minecraft/class_7383
 	f	Lnet/minecraft/advancements/critereon/MinMaxBounds$Ints;	size	field_38759
 c	net/minecraft/advancements/critereon/StatePropertiesPredicate	net/minecraft/class_4559
-c	net/minecraft/advancements/critereon/StatePropertiesPredicate$ExactPropertyMatcher	net/minecraft/class_4559$class_4561
-	f	Ljava/lang/String;	value	field_20739
 c	net/minecraft/advancements/critereon/StatePropertiesPredicate$PropertyMatcher	net/minecraft/class_4559$class_4562
 	f	Ljava/lang/String;	name	field_20740
 	m	()Ljava/lang/String;	getName	method_22533
@@ -413,7 +402,6 @@ c	net/minecraft/client/NarratorStatus	net/minecraft/class_4065
 	f	Lnet/minecraft/network/chat/Component;	name	field_24212
 	m	()Lnet/minecraft/network/chat/Component;	getName	method_18511
 c	net/minecraft/client/OptionInstance	net/minecraft/class_7172
-	f	Ljava/lang/Object;	value	field_37868
 	m	()Ljava/lang/Object;	get	method_41753
 	m	(Ljava/lang/Object;)V	set	method_41748
 c	net/minecraft/client/Options	net/minecraft/class_315
@@ -472,8 +460,6 @@ c	net/minecraft/client/gui/components/AbstractSelectionList$TrackedList	net/mine
 	m	(I)Lnet/minecraft/client/gui/components/AbstractSelectionList$Entry;	remove	method_1911
 	m	(ILnet/minecraft/client/gui/components/AbstractSelectionList$Entry;)Lnet/minecraft/client/gui/components/AbstractSelectionList$Entry;	set	method_1909
 	m	(ILnet/minecraft/client/gui/components/AbstractSelectionList$Entry;)V	add	method_1910
-c	net/minecraft/client/gui/components/AbstractSliderButton	net/minecraft/class_357
-	f	D	value	field_22753
 c	net/minecraft/client/gui/components/AbstractWidget	net/minecraft/class_339
 	f	I	x	field_22760
 	f	I	y	field_22761
@@ -489,14 +475,12 @@ c	net/minecraft/client/gui/components/ChatComponent	net/minecraft/class_338
 c	net/minecraft/client/gui/components/CommandSuggestions	net/minecraft/class_4717
 	f	Lnet/minecraft/client/Minecraft;	minecraft	field_21597
 c	net/minecraft/client/gui/components/CycleButton	net/minecraft/class_5676
-	f	Ljava/lang/Object;	value	field_27965
 	f	Lnet/minecraft/network/chat/Component;	name	field_27963
 	m	()Ljava/lang/Object;	getValue	method_32603
 c	net/minecraft/client/gui/components/DebugScreenOverlay	net/minecraft/class_340
 	f	Lnet/minecraft/client/Minecraft;	minecraft	field_2079
 	f	Lnet/minecraft/world/phys/HitResult;	block	field_2082
 c	net/minecraft/client/gui/components/EditBox	net/minecraft/class_342
-	f	Ljava/lang/String;	value	field_2092
 	m	()Ljava/lang/String;	getValue	method_1882
 	m	()V	tick	method_1865
 c	net/minecraft/client/gui/components/LockIconButton$Icon	net/minecraft/class_347$class_348
@@ -509,9 +493,6 @@ c	net/minecraft/client/gui/components/MultiLineEditBox	net/minecraft/class_7529
 	m	()V	tick	method_44406
 c	net/minecraft/client/gui/components/MultiLineLabel	net/minecraft/class_5489
 	f	Lnet/minecraft/client/gui/components/MultiLineLabel;	EMPTY	field_26528
-c	net/minecraft/client/gui/components/MultilineTextField	net/minecraft/class_7530
-	f	Ljava/lang/String;	value	field_39515
-	m	()Ljava/lang/String;	value	method_44421
 c	net/minecraft/client/gui/components/MultilineTextField$StringView	net/minecraft/class_7530$class_7531
 	f	Lnet/minecraft/client/gui/components/MultilineTextField$StringView;	EMPTY	field_39524
 c	net/minecraft/client/gui/components/PlayerTabOverlay	net/minecraft/class_355
@@ -725,8 +706,6 @@ c	net/minecraft/client/gui/screens/recipebook/RecipeBookPage	net/minecraft/class
 c	net/minecraft/client/gui/screens/recipebook/RecipeButton	net/minecraft/class_514
 	m	(Lnet/minecraft/client/gui/screens/recipebook/RecipeCollection;Lnet/minecraft/client/gui/screens/recipebook/RecipeBookPage;)V	init	method_2640
 c	net/minecraft/client/gui/screens/recipebook/RecipeCollection	net/minecraft/class_516
-c	net/minecraft/client/gui/screens/reporting/ChatReportScreen$DiscardReportWarningScreen	net/minecraft/class_7538$class_7539
-	f	Lnet/minecraft/network/chat/Component;	RETURN	field_39725
 c	net/minecraft/client/gui/screens/reporting/ChatSelectionLogFiller	net/minecraft/class_7541
 	f	Lnet/minecraft/client/multiplayer/chat/ChatLog;	log	field_39581
 c	net/minecraft/client/gui/screens/social/PlayerEntry	net/minecraft/class_5519
@@ -783,9 +762,6 @@ c	net/minecraft/client/model/geom/ModelPart$Cube	net/minecraft/class_630$class_6
 	f	F	minX	field_3645
 	f	F	minY	field_3644
 	f	F	minZ	field_3643
-c	net/minecraft/client/model/geom/PartNames	net/minecraft/class_6230
-	f	Ljava/lang/String;	HEAD	field_32606
-	f	Ljava/lang/String;	TAIL	field_32599
 c	net/minecraft/client/model/geom/PartPose	net/minecraft/class_5603
 	f	F	x	field_27702
 	f	F	y	field_27703
@@ -817,6 +793,8 @@ c	net/minecraft/client/multiplayer/ClientSuggestionProvider	net/minecraft/class_
 c	net/minecraft/client/multiplayer/MultiPlayerGameMode	net/minecraft/class_636
 	f	Lnet/minecraft/client/Minecraft;	minecraft	field_3712
 	m	()V	tick	method_2927
+	m	(Lnet/minecraft/client/player/LocalPlayer;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;	useItemOn	method_2896
+	m	(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;	useItem	method_2919
 c	net/minecraft/client/multiplayer/ServerData	net/minecraft/class_642
 	f	I	protocol	field_3756
 	f	Ljava/lang/String;	name	field_3752
@@ -856,8 +834,6 @@ c	net/minecraft/client/multiplayer/resolver/ServerRedirectHandler	net/minecraft/
 	f	Lnet/minecraft/client/multiplayer/resolver/ServerRedirectHandler;	EMPTY	field_33750
 c	net/minecraft/client/particle/DripParticle	net/minecraft/class_663
 	m	()Lnet/minecraft/world/level/material/Fluid;	getType	method_32791
-c	net/minecraft/client/particle/FireworkParticles$Starter	net/minecraft/class_677$class_681
-	f	Lnet/minecraft/nbt/ListTag;	explosions	field_3806
 c	net/minecraft/client/particle/Particle	net/minecraft/class_703
 	f	D	x	field_3874
 	f	D	y	field_3854
@@ -975,14 +951,9 @@ c	net/minecraft/client/renderer/block/model/BlockModel$GuiLight	net/minecraft/cl
 	f	Ljava/lang/String;	name	field_21860
 c	net/minecraft/client/renderer/block/model/BlockModelDefinition$Context	net/minecraft/class_790$class_791
 c	net/minecraft/client/renderer/block/model/ItemOverride$Predicate	net/minecraft/class_799$class_5826
-	f	F	value	field_28791
 	m	()F	getValue	method_33693
 c	net/minecraft/client/renderer/block/model/ItemOverrides	net/minecraft/class_806
 	f	Lnet/minecraft/client/renderer/block/model/ItemOverrides;	EMPTY	field_4292
-c	net/minecraft/client/renderer/block/model/ItemOverrides$PropertyMatcher	net/minecraft/class_806$class_5828
-	f	F	value	field_28797
-c	net/minecraft/client/renderer/block/model/multipart/KeyValueCondition	net/minecraft/class_818
-	f	Ljava/lang/String;	value	field_4332
 c	net/minecraft/client/renderer/block/model/multipart/MultiPart$Deserializer	net/minecraft/class_816$class_817
 	f	Lnet/minecraft/client/renderer/block/model/BlockModelDefinition$Context;	context	field_4331
 c	net/minecraft/client/renderer/blockentity/BlockEntityRenderDispatcher	net/minecraft/class_824
@@ -1276,7 +1247,6 @@ c	net/minecraft/commands/arguments/ArgumentSignatures$Entry	net/minecraft/class_
 c	net/minecraft/commands/arguments/EntityAnchorArgument$Anchor	net/minecraft/class_2183$class_2184
 	f	Ljava/lang/String;	name	field_9849
 c	net/minecraft/commands/arguments/EntityArgument	net/minecraft/class_2186
-	m	()Lnet/minecraft/commands/arguments/EntityArgument;	entities	method_9306
 	m	()Lnet/minecraft/commands/arguments/EntityArgument;	entity	method_9309
 	m	()Lnet/minecraft/commands/arguments/EntityArgument;	player	method_9305
 	m	(Lcom/mojang/brigadier/context/CommandContext;Ljava/lang/String;)Ljava/util/Collection;	getEntities	method_9317
@@ -1294,27 +1264,19 @@ c	net/minecraft/commands/arguments/NbtPathArgument$Node	net/minecraft/class_2203
 	m	(Ljava/util/List;Ljava/util/function/BiConsumer;)Ljava/util/List;	collect	method_9384
 c	net/minecraft/commands/arguments/ObjectiveCriteriaArgument	net/minecraft/class_2216
 	m	(Lnet/minecraft/stats/StatType;Ljava/lang/Object;)Ljava/lang/String;	getName	method_9400
-c	net/minecraft/commands/arguments/ResourceOrTagArgument$ResourceResult	net/minecraft/class_7737$class_7740
-	f	Lnet/minecraft/core/Holder$Reference;	value	comp_1023
-	m	()Lnet/minecraft/core/Holder$Reference;	value	comp_1023
 c	net/minecraft/commands/arguments/ScoreHolderArgument	net/minecraft/class_2233
 	m	(Lcom/mojang/brigadier/context/CommandContext;Ljava/lang/String;)Ljava/lang/String;	getName	method_9452
 c	net/minecraft/commands/arguments/blocks/BlockInput	net/minecraft/class_2247
 	f	Lnet/minecraft/world/level/block/state/BlockState;	state	field_10632
-c	net/minecraft/commands/arguments/blocks/BlockPredicateArgument	net/minecraft/class_2252
-	f	Lnet/minecraft/core/HolderLookup;	blocks	field_37963
 c	net/minecraft/commands/arguments/blocks/BlockPredicateArgument$BlockPredicate	net/minecraft/class_2252$class_2253
 	f	Lnet/minecraft/world/level/block/state/BlockState;	state	field_10674
 c	net/minecraft/commands/arguments/blocks/BlockStateArgument	net/minecraft/class_2257
-	f	Lnet/minecraft/core/HolderLookup;	blocks	field_37964
 	m	(Lcom/mojang/brigadier/context/CommandContext;Ljava/lang/String;)Lnet/minecraft/commands/arguments/blocks/BlockInput;	getBlock	method_9655
 	m	(Lnet/minecraft/commands/CommandBuildContext;)Lnet/minecraft/commands/arguments/blocks/BlockStateArgument;	block	method_9653
 c	net/minecraft/commands/arguments/blocks/BlockStateParser	net/minecraft/class_2259
-	f	Lnet/minecraft/core/HolderLookup;	blocks	field_37966
 	f	Lnet/minecraft/world/level/block/state/BlockState;	state	field_10686
 	m	()Z	hasBlockEntity	method_9676
 c	net/minecraft/commands/arguments/coordinates/WorldCoordinate	net/minecraft/class_2278
-	f	D	value	field_10758
 	m	(D)D	get	method_9740
 c	net/minecraft/commands/arguments/coordinates/WorldCoordinates	net/minecraft/class_2280
 	f	Lnet/minecraft/commands/arguments/coordinates/WorldCoordinate;	x	field_10765
@@ -1401,15 +1363,10 @@ c	net/minecraft/core/FrontAndTop	net/minecraft/class_5000
 c	net/minecraft/core/GlobalPos	net/minecraft/class_4208
 	m	(Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/core/GlobalPos;	of	method_19443
 c	net/minecraft/core/Holder	net/minecraft/class_6880
-	m	()Ljava/lang/Object;	value	comp_349
-c	net/minecraft/core/Holder$Direct	net/minecraft/class_6880$class_6881
-	f	Ljava/lang/Object;	value	comp_349
 c	net/minecraft/core/Holder$Reference	net/minecraft/class_6880$class_6883
-	f	Ljava/lang/Object;	value	field_36453
 c	net/minecraft/core/HolderGetter	net/minecraft/class_7871
 	m	(Lnet/minecraft/resources/ResourceKey;)Ljava/util/Optional;	get	method_46746
 	m	(Lnet/minecraft/tags/TagKey;)Ljava/util/Optional;	get	method_46733
-c	net/minecraft/core/HolderLookup	net/minecraft/class_7225
 c	net/minecraft/core/HolderOwner	net/minecraft/class_7876
 c	net/minecraft/core/HolderSet	net/minecraft/class_6885
 	m	()I	size	method_40247
@@ -1442,24 +1399,12 @@ c	net/minecraft/core/Registry	net/minecraft/class_2378
 c	net/minecraft/core/RegistryAccess	net/minecraft/class_5455
 	f	Lnet/minecraft/core/RegistryAccess$Frozen;	EMPTY	field_40585
 c	net/minecraft/core/RegistryAccess$Frozen	net/minecraft/class_5455$class_6890
-c	net/minecraft/core/RegistryAccess$RegistryEntry	net/minecraft/class_5455$class_6892
-	f	Lnet/minecraft/core/Registry;	value	comp_351
-	m	()Lnet/minecraft/core/Registry;	value	comp_351
-c	net/minecraft/core/RegistryCodecs$RegistryEntry	net/minecraft/class_6895$class_5501
-	f	Ljava/lang/Object;	value	comp_292
-	m	()Ljava/lang/Object;	value	comp_292
 c	net/minecraft/core/RegistrySetBuilder	net/minecraft/class_7877
 	m	(Lnet/minecraft/resources/ResourceKey;Lcom/mojang/serialization/Lifecycle;Lnet/minecraft/core/RegistrySetBuilder$RegistryBootstrap;)Lnet/minecraft/core/RegistrySetBuilder;	add	method_46776
 	m	(Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/core/RegistrySetBuilder$RegistryBootstrap;)Lnet/minecraft/core/RegistrySetBuilder;	add	method_46777
 c	net/minecraft/core/RegistrySetBuilder$CompositeOwner	net/minecraft/class_7877$class_7879
 	m	(Lnet/minecraft/core/HolderOwner;)V	add	method_46801
-c	net/minecraft/core/RegistrySetBuilder$RegisteredValue	net/minecraft/class_7877$class_7881
-	f	Ljava/lang/Object;	value	comp_1140
-	m	()Ljava/lang/Object;	value	comp_1140
 c	net/minecraft/core/RegistrySetBuilder$RegistryBootstrap	net/minecraft/class_7877$class_7882
-c	net/minecraft/core/RegistrySetBuilder$ValueAndHolder	net/minecraft/class_7877$class_7886
-	f	Lnet/minecraft/core/RegistrySetBuilder$RegisteredValue;	value	comp_1147
-	m	()Lnet/minecraft/core/RegistrySetBuilder$RegisteredValue;	value	comp_1147
 c	net/minecraft/core/RegistrySynchronization	net/minecraft/class_7782
 	m	(Lcom/google/common/collect/ImmutableMap$Builder;Lnet/minecraft/resources/ResourceKey;Lcom/mojang/serialization/Codec;)V	put	method_45951
 c	net/minecraft/core/Rotations	net/minecraft/class_2379
@@ -1557,11 +1502,8 @@ c	net/minecraft/data/models/blockstates/Selector	net/minecraft/class_4934
 c	net/minecraft/data/models/blockstates/Variant	net/minecraft/class_4935
 	m	()Lcom/google/gson/JsonElement;	get	method_25830
 	m	(Lnet/minecraft/data/models/blockstates/Variant;Lnet/minecraft/data/models/blockstates/Variant;)Lnet/minecraft/data/models/blockstates/Variant;	merge	method_25827
-c	net/minecraft/data/models/blockstates/VariantProperties$Rotation	net/minecraft/class_4936$class_4937
-	f	I	value	field_22894
 c	net/minecraft/data/models/blockstates/VariantProperty	net/minecraft/class_4938
 c	net/minecraft/data/models/blockstates/VariantProperty$Value	net/minecraft/class_4938$class_4939
-	f	Ljava/lang/Object;	value	field_22899
 	m	()Lnet/minecraft/data/models/blockstates/VariantProperty;	getKey	method_35907
 c	net/minecraft/data/models/model/DelegatedModel	net/minecraft/class_4940
 	m	()Lcom/google/gson/JsonElement;	get	method_25839
@@ -1741,7 +1683,6 @@ c	net/minecraft/network/chat/ChatTypeDecoration	net/minecraft/class_7463
 c	net/minecraft/network/chat/ChatTypeDecoration$Parameter	net/minecraft/class_7463$class_7464
 	f	Ljava/lang/String;	name	field_39224
 c	net/minecraft/network/chat/ClickEvent	net/minecraft/class_2558
-	f	Ljava/lang/String;	value	field_11740
 	m	()Ljava/lang/String;	getValue	method_10844
 c	net/minecraft/network/chat/ClickEvent$Action	net/minecraft/class_2558$class_2559
 	f	Ljava/lang/String;	name	field_11742
@@ -1762,7 +1703,6 @@ c	net/minecraft/network/chat/FormattedText	net/minecraft/class_5348
 	m	(Ljava/lang/String;)Lnet/minecraft/network/chat/FormattedText;	of	method_29430
 	m	(Ljava/lang/String;Lnet/minecraft/network/chat/Style;)Lnet/minecraft/network/chat/FormattedText;	of	method_29431
 c	net/minecraft/network/chat/HoverEvent	net/minecraft/class_2568
-	f	Ljava/lang/Object;	value	field_11755
 	m	(Lnet/minecraft/network/chat/HoverEvent$Action;)Ljava/lang/Object;	getValue	method_10891
 c	net/minecraft/network/chat/HoverEvent$Action	net/minecraft/class_2568$class_5247
 	f	Ljava/lang/String;	name	field_24346
@@ -1787,14 +1727,11 @@ c	net/minecraft/network/chat/SignableCommand	net/minecraft/class_7644
 	m	()Ljava/util/List;	arguments	comp_974
 	m	(Lcom/mojang/brigadier/ParseResults;)Lnet/minecraft/network/chat/SignableCommand;	of	method_45043
 c	net/minecraft/network/chat/SignableCommand$Argument	net/minecraft/class_7644$class_7645
-	f	Ljava/lang/String;	value	comp_1089
 	m	()Ljava/lang/String;	name	method_45046
-	m	()Ljava/lang/String;	value	comp_1089
 c	net/minecraft/network/chat/Style	net/minecraft/class_2583
 	f	Lnet/minecraft/network/chat/Style;	EMPTY	field_24360
 	m	()Z	isEmpty	method_10967
 c	net/minecraft/network/chat/TextColor	net/minecraft/class_5251
-	f	I	value	field_24364
 	f	Ljava/lang/String;	name	field_24365
 	m	()I	getValue	method_27716
 c	net/minecraft/network/chat/contents/KeybindContents	net/minecraft/class_2572
@@ -1820,7 +1757,6 @@ c	net/minecraft/network/protocol/game/ClientboundAddExperienceOrbPacket	net/mine
 	f	D	x	field_11972
 	f	D	y	field_11971
 	f	D	z	field_11970
-	f	I	value	field_11973
 	m	()D	getX	method_11185
 	m	()D	getY	method_11181
 	m	()D	getZ	method_11180
@@ -1857,7 +1793,6 @@ c	net/minecraft/network/protocol/game/ClientboundBossEventPacket$UpdateNameOpera
 c	net/minecraft/network/protocol/game/ClientboundCommandsPacket$NodeResolver	net/minecraft/class_2641$class_7234
 	f	Lnet/minecraft/commands/CommandBuildContext;	context	field_38045
 c	net/minecraft/network/protocol/game/ClientboundContainerSetDataPacket	net/minecraft/class_2651
-	f	I	value	field_12148
 	m	()I	getValue	method_11446
 c	net/minecraft/network/protocol/game/ClientboundCooldownPacket	net/minecraft/class_2656
 	f	Lnet/minecraft/world/item/Item;	item	field_12154
@@ -2049,12 +1984,7 @@ c	net/minecraft/network/syncher/SynchedEntityData	net/minecraft/class_2945
 	m	(Lnet/minecraft/network/syncher/EntityDataAccessor;Ljava/lang/Object;)V	set	method_12778
 	m	(Lnet/minecraft/network/syncher/EntityDataAccessor;Ljava/lang/Object;Z)V	set	method_49743
 c	net/minecraft/network/syncher/SynchedEntityData$DataItem	net/minecraft/class_2945$class_2946
-	f	Ljava/lang/Object;	value	field_13338
 	m	()Ljava/lang/Object;	getValue	method_12794
-	m	()Lnet/minecraft/network/syncher/SynchedEntityData$DataValue;	value	method_46359
-c	net/minecraft/network/syncher/SynchedEntityData$DataValue	net/minecraft/class_2945$class_7834
-	f	Ljava/lang/Object;	value	comp_1117
-	m	()Ljava/lang/Object;	value	comp_1117
 c	net/minecraft/realms/RealmsConnect	net/minecraft/class_4902
 	m	()V	tick	method_25481
 c	net/minecraft/realms/RealmsLabel	net/minecraft/class_4903
@@ -2087,7 +2017,6 @@ c	net/minecraft/server/ServerScoreboard	net/minecraft/class_2995
 c	net/minecraft/server/TickTask	net/minecraft/class_3738
 	f	I	tick	field_16504
 c	net/minecraft/server/bossevents/CustomBossEvent	net/minecraft/class_3002
-	f	I	value	field_13443
 	m	()I	getValue	method_12955
 c	net/minecraft/server/bossevents/CustomBossEvents	net/minecraft/class_3004
 	m	(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/server/bossevents/CustomBossEvent;	get	method_12971
@@ -2317,8 +2246,6 @@ c	net/minecraft/server/dedicated/Settings	net/minecraft/class_3808
 	m	(Ljava/lang/String;Ljava/util/function/Function;Ljava/util/function/UnaryOperator;Ljava/util/function/Function;Ljava/lang/Object;)Ljava/lang/Object;	get	method_16735
 	m	(Ljava/lang/String;Ljava/util/function/UnaryOperator;I)I	get	method_16720
 	m	(Ljava/lang/String;Z)Z	get	method_16740
-c	net/minecraft/server/dedicated/Settings$MutableValue	net/minecraft/class_3808$class_3809
-	f	Ljava/lang/Object;	value	field_16850
 c	net/minecraft/server/gui/MinecraftServerGui	net/minecraft/class_3182
 	f	Lnet/minecraft/server/dedicated/DedicatedServer;	server	field_13839
 c	net/minecraft/server/gui/PlayerListComponent	net/minecraft/class_3184
@@ -2334,11 +2261,13 @@ c	net/minecraft/server/level/ChunkHolder	net/minecraft/class_3193
 c	net/minecraft/server/level/ChunkHolder$PlayerProvider	net/minecraft/class_3193$class_3897
 	m	(Lnet/minecraft/world/level/ChunkPos;Z)Ljava/util/List;	getPlayers	method_17210
 c	net/minecraft/server/level/ChunkMap	net/minecraft/class_3898
+	f	Lnet/minecraft/server/level/PlayerMap;	playerMap	field_18241
 	f	Lnet/minecraft/server/level/ServerLevel;	level	field_17214
 	m	()I	size	method_17260
 	m	()V	tick	method_18727
 	m	(Ljava/util/function/BooleanSupplier;)V	tick	method_17233
 	m	(Lnet/minecraft/server/level/ServerPlayer;)Z	skipPlayer	method_18722
+	m	(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/entity/Entity;)D	euclideanDistanceSquared	method_18704
 c	net/minecraft/server/level/ChunkMap$1	net/minecraft/class_3898$1
 c	net/minecraft/server/level/ChunkMap$2	net/minecraft/class_3898$2
 c	net/minecraft/server/level/ChunkMap$DistanceManager	net/minecraft/class_3898$class_3216
@@ -2364,6 +2293,7 @@ c	net/minecraft/server/level/ServerBossEvent	net/minecraft/class_3213
 c	net/minecraft/server/level/ServerChunkCache	net/minecraft/class_3215
 	f	Lnet/minecraft/server/level/ChunkMap;	chunkMap	field_17254
 	f	Lnet/minecraft/server/level/ServerLevel;	level	field_13945
+	m	()V	tickChunks	method_14161
 c	net/minecraft/server/level/ServerChunkCache$ChunkAndHolder	net/minecraft/class_3215$class_6635
 	f	Lnet/minecraft/world/level/chunk/LevelChunk;	chunk	comp_141
 	m	()Lnet/minecraft/world/level/chunk/LevelChunk;	chunk	comp_141
@@ -2377,6 +2307,7 @@ c	net/minecraft/server/level/ServerLevel	net/minecraft/class_3218
 	m	(Ljava/util/function/BooleanSupplier;)V	tick	method_18765
 	m	(Ljava/util/function/Predicate;)Ljava/util/List;	getPlayers	method_18766
 	m	(Ljava/util/function/Predicate;I)Ljava/util/List;	getPlayers	method_47540
+	m	(Lnet/minecraft/world/level/chunk/LevelChunk;I)V	tickChunk	method_18203
 	m	(Lnet/minecraft/world/level/entity/EntityTypeTest;Ljava/util/function/Predicate;)Ljava/util/List;	getEntities	method_18198
 	m	(Lnet/minecraft/world/level/entity/EntityTypeTest;Ljava/util/function/Predicate;Ljava/util/List;)V	getEntities	method_47538
 	m	(Lnet/minecraft/world/level/entity/EntityTypeTest;Ljava/util/function/Predicate;Ljava/util/List;I)V	getEntities	method_47539
@@ -2390,6 +2321,9 @@ c	net/minecraft/server/level/ServerPlayerGameMode	net/minecraft/class_3225
 	f	Lnet/minecraft/server/level/ServerPlayer;	player	field_14008
 	m	()V	tick	method_14264
 	m	()Z	isCreative	method_14268
+	m	(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;II)V	handleBlockBreakAction	method_14263
+	m	(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;	useItem	method_14256
+	m	(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;	useItemOn	method_14262
 c	net/minecraft/server/level/ThreadedLevelLightEngine	net/minecraft/class_3227
 	f	Lnet/minecraft/server/level/ChunkMap;	chunkMap	field_17257
 c	net/minecraft/server/level/Ticket	net/minecraft/class_3228
@@ -2474,11 +2408,9 @@ c	net/minecraft/server/players/IpBanList	net/minecraft/class_3317
 c	net/minecraft/server/players/IpBanListEntry	net/minecraft/class_3320
 c	net/minecraft/server/players/PlayerList	net/minecraft/class_3324
 	f	Lnet/minecraft/server/MinecraftServer;	server	field_14360
-	f	Lnet/minecraft/server/players/ServerOpList;	ops	field_14353
 	m	()Ljava/util/List;	getPlayers	method_14571
 	m	()V	tick	method_14601
 	m	(Lnet/minecraft/server/level/ServerPlayer;)V	remove	method_14611
-c	net/minecraft/server/players/ServerOpList	net/minecraft/class_3326
 c	net/minecraft/server/players/ServerOpListEntry	net/minecraft/class_3327
 	f	I	level	field_14366
 c	net/minecraft/server/players/StoredUserEntry	net/minecraft/class_3330
@@ -2512,7 +2444,6 @@ c	net/minecraft/stats/ServerStatsCounter	net/minecraft/class_3442
 	f	Lnet/minecraft/server/MinecraftServer;	server	field_15308
 	m	(Lnet/minecraft/stats/Stat;)Lnet/minecraft/resources/ResourceLocation;	getKey	method_14907
 c	net/minecraft/stats/Stat	net/minecraft/class_3445
-	f	Ljava/lang/Object;	value	field_15320
 	m	()Ljava/lang/Object;	getValue	method_14951
 	m	()Lnet/minecraft/stats/StatType;	getType	method_14949
 	m	(I)Ljava/lang/String;	format	method_14953
@@ -2545,13 +2476,6 @@ c	net/minecraft/util/CrudeIncrementalIntIdentityHashBiMap	net/minecraft/class_35
 	m	(Ljava/lang/Object;)I	add	method_15225
 c	net/minecraft/util/Crypt$SaltSignaturePair	net/minecraft/class_3515$class_7425
 	f	Lnet/minecraft/util/Crypt$SaltSignaturePair;	EMPTY	field_39040
-c	net/minecraft/util/CubicSpline	net/minecraft/class_6492
-c	net/minecraft/util/CubicSpline$1Point	net/minecraft/class_6492$class_6737
-	f	Lnet/minecraft/util/CubicSpline;	value	comp_226
-	m	()Lnet/minecraft/util/CubicSpline;	value	comp_226
-c	net/minecraft/util/CubicSpline$Constant	net/minecraft/class_6492$class_6494
-	f	F	value	comp_228
-	m	()F	value	comp_228
 c	net/minecraft/util/DebugBuffer	net/minecraft/class_5831
 	m	(Ljava/lang/Object;)V	push	method_33721
 c	net/minecraft/util/ExceptionCollector	net/minecraft/class_5127
@@ -2733,7 +2657,6 @@ c	net/minecraft/util/profiling/metrics/storage/RecordedDeviation	net/minecraft/c
 c	net/minecraft/util/random/SimpleWeightedRandomList$Builder	net/minecraft/class_6005$class_6006
 	m	(Ljava/lang/Object;I)Lnet/minecraft/util/random/SimpleWeightedRandomList$Builder;	add	method_34975
 c	net/minecraft/util/random/Weight	net/minecraft/class_6007
-	f	I	value	field_29930
 	m	(I)Lnet/minecraft/util/random/Weight;	of	method_34977
 c	net/minecraft/util/random/WeightedRandomList	net/minecraft/class_6012
 	m	()Z	isEmpty	method_34993
@@ -2764,11 +2687,9 @@ c	net/minecraft/util/valueproviders/ClampedNormalFloat	net/minecraft/class_5861
 c	net/minecraft/util/valueproviders/ClampedNormalInt	net/minecraft/class_6728
 	m	(FFII)Lnet/minecraft/util/valueproviders/ClampedNormalInt;	of	method_39156
 c	net/minecraft/util/valueproviders/ConstantFloat	net/minecraft/class_5862
-	f	F	value	field_29005
 	m	()F	getValue	method_33914
 	m	(F)Lnet/minecraft/util/valueproviders/ConstantFloat;	of	method_33908
 c	net/minecraft/util/valueproviders/ConstantInt	net/minecraft/class_6016
-	f	I	value	field_29944
 	m	()I	getValue	method_34997
 	m	(I)Lnet/minecraft/util/valueproviders/ConstantInt;	of	method_34998
 c	net/minecraft/util/valueproviders/FloatProvider	net/minecraft/class_5863
@@ -2853,14 +2774,12 @@ c	net/minecraft/world/entity/Entity	net/minecraft/class_1297
 	m	()Z	ignoreExplosion	method_5659
 	m	()Z	isIgnoringBlockTriggers	method_5696
 	m	()Z	isSpectator	method_7325
-	m	()Z	isSteppingCarefully	method_21749
 	m	()Z	onGround	method_24828
 	m	(D)D	getX	method_23316
 	m	(D)D	getY	method_23323
 	m	(D)D	getZ	method_23324
 	m	(DDD)V	push	method_5762
 	m	(DDD)V	setDeltaMovement	method_18800
-	m	(DDD)V	teleportToWithTicket	method_20620
 	m	(DZLnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)V	checkFallDamage	method_5623
 	m	(Lnet/minecraft/world/damagesource/DamageSource;F)Z	hurt	method_5643
 	m	(Lnet/minecraft/world/entity/Entity$RemovalReason;)V	remove	method_5650
@@ -2887,30 +2806,25 @@ c	net/minecraft/world/entity/EntityType$Builder	net/minecraft/class_1299$class_1
 c	net/minecraft/world/entity/EntityType$EntityFactory	net/minecraft/class_1299$class_4049
 c	net/minecraft/world/entity/EquipmentSlot	net/minecraft/class_1304
 	f	Ljava/lang/String;	name	field_6175
-	f	Lnet/minecraft/world/entity/EquipmentSlot;	HEAD	field_6169
 	m	()Ljava/lang/String;	getName	method_5923
 	m	()Lnet/minecraft/world/entity/EquipmentSlot$Type;	getType	method_5925
 c	net/minecraft/world/entity/EquipmentSlot$Type	net/minecraft/class_1304$class_1305
 c	net/minecraft/world/entity/ExperienceOrb	net/minecraft/class_1303
-	f	I	value	field_6159
 	m	()I	getValue	method_5919
 	m	(Lnet/minecraft/world/entity/ExperienceOrb;)V	merge	method_31497
 c	net/minecraft/world/entity/HumanoidArm	net/minecraft/class_1306
 	f	Ljava/lang/String;	name	field_6181
-c	net/minecraft/world/entity/Interaction	net/minecraft/class_8150
-	f	Lnet/minecraft/world/entity/Interaction$PlayerAction;	interaction	field_42634
 c	net/minecraft/world/entity/Interaction$PlayerAction	net/minecraft/class_8150$class_8151
 	f	Ljava/util/UUID;	player	comp_1284
 	m	()Ljava/util/UUID;	player	comp_1284
 c	net/minecraft/world/entity/LivingEntity	net/minecraft/class_1309
+	f	Lnet/minecraft/world/item/ItemStack;	useItem	field_6277
 c	net/minecraft/world/entity/LivingEntity$1	net/minecraft/class_1309$1
 c	net/minecraft/world/entity/LivingEntity$Fallsounds	net/minecraft/class_1309$class_6823
 c	net/minecraft/world/entity/Mob	net/minecraft/class_1308
 c	net/minecraft/world/entity/MobCategory	net/minecraft/class_1311
 	f	Ljava/lang/String;	name	field_6304
 	m	()Ljava/lang/String;	getName	method_6133
-c	net/minecraft/world/entity/MobSpawnType	net/minecraft/class_3730
-	f	Lnet/minecraft/world/entity/MobSpawnType;	COMMAND	field_16462
 c	net/minecraft/world/entity/OwnableEntity	net/minecraft/class_6025
 	m	()Lnet/minecraft/world/level/EntityGetter;	level	method_48926
 c	net/minecraft/world/entity/PathfinderMob	net/minecraft/class_1314
@@ -2928,8 +2842,6 @@ c	net/minecraft/world/entity/WalkAnimationState	net/minecraft/class_8080
 	m	(F)F	position	method_48572
 c	net/minecraft/world/entity/ai/Brain	net/minecraft/class_4095
 	m	(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)V	tick	method_19542
-c	net/minecraft/world/entity/ai/Brain$MemoryValue	net/minecraft/class_4095$class_5302
-	f	Ljava/util/Optional;	value	field_24662
 c	net/minecraft/world/entity/ai/attributes/Attribute	net/minecraft/class_1320
 c	net/minecraft/world/entity/ai/attributes/AttributeInstance	net/minecraft/class_1324
 	m	()D	getValue	method_6194
@@ -2939,8 +2851,6 @@ c	net/minecraft/world/entity/ai/attributes/AttributeMap	net/minecraft/class_5131
 	m	(Lnet/minecraft/world/entity/ai/attributes/Attribute;)Lnet/minecraft/world/entity/ai/attributes/AttributeInstance;	getInstance	method_26842
 c	net/minecraft/world/entity/ai/attributes/AttributeModifier	net/minecraft/class_1322
 	m	()Ljava/lang/String;	getName	method_6185
-c	net/minecraft/world/entity/ai/attributes/AttributeModifier$Operation	net/minecraft/class_1322$class_1323
-	f	I	value	field_6329
 c	net/minecraft/world/entity/ai/attributes/AttributeSupplier	net/minecraft/class_5132
 	m	(Lnet/minecraft/world/entity/ai/attributes/Attribute;)D	getValue	method_26862
 c	net/minecraft/world/entity/ai/attributes/AttributeSupplier$Builder	net/minecraft/class_5132$class_5133
@@ -3015,8 +2925,6 @@ c	net/minecraft/world/entity/ai/behavior/declarative/BehaviorBuilder$Instance	ne
 	m	(Lnet/minecraft/world/entity/ai/behavior/declarative/MemoryAccessor;)Ljava/lang/Object;	get	method_47243
 c	net/minecraft/world/entity/ai/behavior/declarative/BehaviorBuilder$TriggerWithResult	net/minecraft/class_7898$class_7904
 c	net/minecraft/world/entity/ai/behavior/declarative/MemoryAccessor	net/minecraft/class_7906
-	f	Lcom/mojang/datafixers/kinds/App;	value	field_41027
-	m	()Lcom/mojang/datafixers/kinds/App;	value	method_47248
 	m	(Ljava/lang/Object;)V	set	method_47249
 c	net/minecraft/world/entity/ai/behavior/warden/Roar	net/minecraft/class_7255
 	m	(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/monster/warden/Warden;J)V	tick	method_42191
@@ -3061,12 +2969,8 @@ c	net/minecraft/world/entity/ai/gossip/GossipContainer	net/minecraft/class_4136
 c	net/minecraft/world/entity/ai/gossip/GossipContainer$EntityGossips	net/minecraft/class_4136$class_4137
 	m	()Z	isEmpty	method_20654
 	m	(Lnet/minecraft/world/entity/ai/gossip/GossipType;)V	remove	method_20655
-c	net/minecraft/world/entity/ai/gossip/GossipContainer$GossipEntry	net/minecraft/class_4136$class_4138
-	f	I	value	comp_1182
-	m	()I	value	comp_1182
 c	net/minecraft/world/entity/ai/gossip/GossipType	net/minecraft/class_4139
 c	net/minecraft/world/entity/ai/memory/ExpirableValue	net/minecraft/class_4831
-	f	Ljava/lang/Object;	value	field_22330
 	m	()Ljava/lang/Object;	getValue	method_24637
 	m	()V	tick	method_24913
 	m	(Ljava/lang/Object;)Lnet/minecraft/world/entity/ai/memory/ExpirableValue;	of	method_28355
@@ -3198,7 +3102,6 @@ c	net/minecraft/world/entity/npc/VillagerProfession	net/minecraft/class_3852
 	m	(Ljava/lang/String;Lnet/minecraft/resources/ResourceKey;Lcom/google/common/collect/ImmutableSet;Lcom/google/common/collect/ImmutableSet;Lnet/minecraft/sounds/SoundEvent;)Lnet/minecraft/world/entity/npc/VillagerProfession;	register	method_19197
 	m	(Ljava/lang/String;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/sounds/SoundEvent;)Lnet/minecraft/world/entity/npc/VillagerProfession;	register	method_16926
 c	net/minecraft/world/entity/npc/VillagerTrades$DyedArmorForEmeralds	net/minecraft/class_3853$class_4160
-	f	I	value	field_18545
 	f	Lnet/minecraft/world/item/Item;	item	field_18544
 c	net/minecraft/world/entity/npc/VillagerTrades$EmeraldForItems	net/minecraft/class_3853$class_4161
 	f	Lnet/minecraft/world/item/Item;	item	field_18548
@@ -3245,7 +3148,6 @@ c	net/minecraft/world/entity/schedule/Activity	net/minecraft/class_4168
 	m	()Ljava/lang/String;	getName	method_19634
 	m	(Ljava/lang/String;)Lnet/minecraft/world/entity/schedule/Activity;	register	method_19210
 c	net/minecraft/world/entity/schedule/Keyframe	net/minecraft/class_4169
-	f	F	value	field_18602
 	m	()F	getValue	method_19212
 c	net/minecraft/world/entity/schedule/Schedule	net/minecraft/class_4170
 	f	Lnet/minecraft/world/entity/schedule/Schedule;	EMPTY	field_18603
@@ -3281,8 +3183,6 @@ c	net/minecraft/world/inventory/CraftingMenu	net/minecraft/class_1714
 c	net/minecraft/world/inventory/DataSlot	net/minecraft/class_3915
 	m	()I	get	method_17407
 	m	(I)V	set	method_17404
-c	net/minecraft/world/inventory/DataSlot$3	net/minecraft/class_3915$3
-	f	I	value	field_17312
 c	net/minecraft/world/inventory/EnchantmentMenu	net/minecraft/class_1718
 	f	Lnet/minecraft/util/RandomSource;	random	field_7811
 c	net/minecraft/world/inventory/FurnaceResultSlot	net/minecraft/class_1719
@@ -3339,8 +3239,6 @@ c	net/minecraft/world/item/CreativeModeTab$Output	net/minecraft/class_1761$class
 	m	(Lnet/minecraft/world/level/ItemLike;Lnet/minecraft/world/item/CreativeModeTab$TabVisibility;)V	accept	method_45422
 c	net/minecraft/world/item/CreativeModeTab$TabVisibility	net/minecraft/class_1761$class_7705
 c	net/minecraft/world/item/CreativeModeTab$Type	net/minecraft/class_1761$class_7916
-c	net/minecraft/world/item/DiggerItem	net/minecraft/class_1766
-	f	Lnet/minecraft/tags/TagKey;	blocks	field_7941
 c	net/minecraft/world/item/DyeColor	net/minecraft/class_1767
 	f	Ljava/lang/String;	name	field_7948
 	m	()Ljava/lang/String;	getName	method_7792
@@ -3355,7 +3253,6 @@ c	net/minecraft/world/item/ItemCooldowns	net/minecraft/class_1796
 	m	()V	tick	method_7903
 c	net/minecraft/world/item/ItemDisplayContext	net/minecraft/class_811
 	f	Ljava/lang/String;	name	field_42471
-	f	Lnet/minecraft/world/item/ItemDisplayContext;	HEAD	field_4316
 	f	Lnet/minecraft/world/item/ItemDisplayContext;	NONE	field_4315
 c	net/minecraft/world/item/ItemStack	net/minecraft/class_1799
 	f	Lnet/minecraft/world/item/Item;	item	field_8038
@@ -3492,13 +3389,11 @@ c	net/minecraft/world/level/FoliageColor	net/minecraft/class_1926
 c	net/minecraft/world/level/GameRules	net/minecraft/class_1928
 	m	(Ljava/lang/String;Lnet/minecraft/world/level/GameRules$Category;Lnet/minecraft/world/level/GameRules$Type;)Lnet/minecraft/world/level/GameRules$Key;	register	method_8359
 c	net/minecraft/world/level/GameRules$BooleanValue	net/minecraft/class_1928$class_4310
-	f	Z	value	field_19411
 	m	()Z	get	method_20753
 	m	(ZLnet/minecraft/server/MinecraftServer;)V	set	method_20758
 c	net/minecraft/world/level/GameRules$Category	net/minecraft/class_1928$class_5198
 	f	Lnet/minecraft/world/level/GameRules$Category;	UPDATES	field_24098
 c	net/minecraft/world/level/GameRules$IntegerValue	net/minecraft/class_1928$class_4312
-	f	I	value	field_19412
 	m	()I	get	method_20763
 	m	(ILnet/minecraft/server/MinecraftServer;)V	set	method_35236
 c	net/minecraft/world/level/GameRules$Key	net/minecraft/class_1928$class_4313
@@ -3539,6 +3434,9 @@ c	net/minecraft/world/level/LocalMobCapCalculator	net/minecraft/class_6540
 c	net/minecraft/world/level/LocalMobCapCalculator$MobCounts	net/minecraft/class_6540$class_6541
 	m	(Lnet/minecraft/world/entity/MobCategory;)V	add	method_38088
 c	net/minecraft/world/level/NaturalSpawner	net/minecraft/class_1948
+	m	(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)V	spawnForChunk	method_27821
+	m	(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;)V	spawnCategoryForPosition	method_35240
+	m	(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V	spawnCategoryForPosition	method_24930
 c	net/minecraft/world/level/NaturalSpawner$1	net/minecraft/class_1948$1
 c	net/minecraft/world/level/NaturalSpawner$AfterSpawnCallback	net/minecraft/class_1948$class_5259
 c	net/minecraft/world/level/NaturalSpawner$ChunkGetter	net/minecraft/class_1948$class_5260
@@ -3574,8 +3472,6 @@ c	net/minecraft/world/level/biome/Climate	net/minecraft/class_6544
 c	net/minecraft/world/level/biome/Climate$Parameter	net/minecraft/class_6544$class_6546
 c	net/minecraft/world/level/biome/Climate$ParameterList	net/minecraft/class_6544$class_6547
 c	net/minecraft/world/level/biome/Climate$ParameterPoint	net/minecraft/class_6544$class_4762
-c	net/minecraft/world/level/biome/Climate$RTree$Leaf	net/minecraft/class_6544$class_6548$class_6549
-	f	Ljava/lang/Object;	value	field_34489
 c	net/minecraft/world/level/biome/MobSpawnSettings	net/minecraft/class_5483
 	f	Lnet/minecraft/world/level/biome/MobSpawnSettings;	EMPTY	field_26646
 c	net/minecraft/world/level/biome/MultiNoiseBiomeSource	net/minecraft/class_4766
@@ -3604,6 +3500,7 @@ c	net/minecraft/world/level/block/Block	net/minecraft/class_2248
 	m	()Lnet/minecraft/world/level/block/state/BlockState;	defaultBlockState	method_9564
 	m	(Lnet/minecraft/world/level/Explosion;)Z	dropFromExplosion	method_9533
 	m	(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/Explosion;)V	wasExploded	method_9586
+	m	(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;F)V	fallOn	method_9554
 	m	(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/entity/BlockEntity;)Ljava/util/List;	getDrops	method_9562
 	m	(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/item/ItemStack;)Ljava/util/List;	getDrops	method_9609
 c	net/minecraft/world/level/block/Block$1	net/minecraft/class_2248$1
@@ -3737,7 +3634,6 @@ c	net/minecraft/world/level/block/state/BlockBehaviour$OffsetType	net/minecraft/
 c	net/minecraft/world/level/block/state/BlockBehaviour$Properties	net/minecraft/class_4970$class_2251
 	f	Z	isAir	field_23180
 	m	()Lnet/minecraft/world/level/block/state/BlockBehaviour$Properties;	of	method_9637
-	m	()Lnet/minecraft/world/level/block/state/BlockBehaviour$Properties;	randomTicks	method_9640
 c	net/minecraft/world/level/block/state/BlockState	net/minecraft/class_2680
 c	net/minecraft/world/level/block/state/StateDefinition$Builder	net/minecraft/class_2689$class_2690
 	m	([Lnet/minecraft/world/level/block/state/properties/Property;)Lnet/minecraft/world/level/block/state/StateDefinition$Builder;	add	method_11667
@@ -3763,7 +3659,6 @@ c	net/minecraft/world/level/block/state/properties/BambooLeaves	net/minecraft/cl
 	f	Lnet/minecraft/world/level/block/state/properties/BambooLeaves;	NONE	field_12469
 c	net/minecraft/world/level/block/state/properties/BedPart	net/minecraft/class_2742
 	f	Ljava/lang/String;	name	field_12559
-	f	Lnet/minecraft/world/level/block/state/properties/BedPart;	HEAD	field_12560
 c	net/minecraft/world/level/block/state/properties/BellAttachType	net/minecraft/class_3867
 	f	Ljava/lang/String;	name	field_17102
 c	net/minecraft/world/level/block/state/properties/BlockSetType	net/minecraft/class_8177
@@ -3793,12 +3688,8 @@ c	net/minecraft/world/level/block/state/properties/Property	net/minecraft/class_
 	f	Ljava/lang/String;	name	field_24743
 	m	()Ljava/lang/String;	getName	method_11899
 	m	(Ljava/lang/Comparable;)Ljava/lang/String;	getName	method_11901
-	m	(Ljava/lang/Comparable;)Lnet/minecraft/world/level/block/state/properties/Property$Value;	value	method_30042
 	m	(Ljava/lang/String;)Ljava/util/Optional;	getValue	method_11900
-	m	(Lnet/minecraft/world/level/block/state/StateHolder;)Lnet/minecraft/world/level/block/state/properties/Property$Value;	value	method_30041
 c	net/minecraft/world/level/block/state/properties/Property$Value	net/minecraft/class_2769$class_4933
-	f	Ljava/lang/Comparable;	value	comp_71
-	m	()Ljava/lang/Comparable;	value	comp_71
 c	net/minecraft/world/level/block/state/properties/RailShape	net/minecraft/class_2768
 	f	Ljava/lang/String;	name	field_12669
 	m	()Ljava/lang/String;	getName	method_35309
@@ -3847,8 +3738,6 @@ c	net/minecraft/world/level/chunk/CarvingMask	net/minecraft/class_6643
 c	net/minecraft/world/level/chunk/ChunkAccess	net/minecraft/class_2791
 	m	()Lnet/minecraft/world/level/ChunkPos;	getPos	method_12004
 c	net/minecraft/world/level/chunk/ChunkAccess$TicksToSave	net/minecraft/class_2791$class_6745
-	f	Lnet/minecraft/world/ticks/SerializableTickContainer;	blocks	comp_239
-	m	()Lnet/minecraft/world/ticks/SerializableTickContainer;	blocks	comp_239
 c	net/minecraft/world/level/chunk/ChunkSource	net/minecraft/class_2802
 	m	(Ljava/util/function/BooleanSupplier;Z)V	tick	method_12127
 c	net/minecraft/world/level/chunk/ChunkStatus	net/minecraft/class_2806
@@ -3896,10 +3785,7 @@ c	net/minecraft/world/level/chunk/PalettedContainerRO$PackedData	net/minecraft/c
 	f	Ljava/util/Optional;	storage	comp_76
 	m	()Ljava/util/Optional;	storage	comp_76
 c	net/minecraft/world/level/chunk/ProtoChunk	net/minecraft/class_2839
-	f	Ljava/util/List;	entities	field_12929
 	m	()Ljava/util/List;	getEntities	method_12295
-c	net/minecraft/world/level/chunk/SingleValuePalette	net/minecraft/class_6564
-	f	Ljava/lang/Object;	value	field_34574
 c	net/minecraft/world/level/chunk/UpgradeData	net/minecraft/class_2843
 	f	Lnet/minecraft/world/level/chunk/UpgradeData;	EMPTY	field_12950
 	m	()Z	isEmpty	method_12349
@@ -3925,14 +3811,12 @@ c	net/minecraft/world/level/dimension/BuiltinDimensionTypes	net/minecraft/class_
 c	net/minecraft/world/level/dimension/DimensionType	net/minecraft/class_2874
 	f	I	minY	comp_651
 	m	()I	minY	comp_651
-c	net/minecraft/world/level/dimension/LevelStem	net/minecraft/class_5363
 c	net/minecraft/world/level/dimension/end/DragonRespawnAnimation	net/minecraft/class_2876
 	m	(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/dimension/end/EndDragonFight;Ljava/util/List;ILnet/minecraft/core/BlockPos;)V	tick	method_12507
 c	net/minecraft/world/level/dimension/end/EndDragonFight	net/minecraft/class_2881
 	f	Lnet/minecraft/server/level/ServerLevel;	level	field_13108
 	m	()V	tick	method_12538
 c	net/minecraft/world/level/entity/ChunkEntities	net/minecraft/class_5566
-	f	Ljava/util/List;	entities	field_27242
 	m	()Ljava/util/stream/Stream;	getEntities	method_31742
 	m	()Lnet/minecraft/world/level/ChunkPos;	getPos	method_31741
 	m	()Z	isEmpty	method_31743
@@ -4026,9 +3910,6 @@ c	net/minecraft/world/level/levelgen/DensityFunctions	net/minecraft/class_6916
 	m	(Lnet/minecraft/world/level/levelgen/DensityFunction;DLnet/minecraft/world/level/levelgen/DensityFunction;)Lnet/minecraft/world/level/levelgen/DensityFunction;	lerp	method_42359
 	m	(Lnet/minecraft/world/level/levelgen/DensityFunction;Lnet/minecraft/world/level/levelgen/DensityFunction;)Lnet/minecraft/world/level/levelgen/DensityFunction;	add	method_40486
 	m	(Lnet/minecraft/world/level/levelgen/DensityFunction;Lnet/minecraft/world/level/levelgen/DensityFunction;Lnet/minecraft/world/level/levelgen/DensityFunction;)Lnet/minecraft/world/level/levelgen/DensityFunction;	lerp	method_40488
-c	net/minecraft/world/level/levelgen/DensityFunctions$Constant	net/minecraft/class_6916$class_6923
-	f	D	value	comp_381
-	m	()D	value	comp_381
 c	net/minecraft/world/level/levelgen/DensityFunctions$HolderHolder	net/minecraft/class_6916$class_7051
 	f	Lnet/minecraft/core/Holder;	function	comp_468
 	m	()Lnet/minecraft/core/Holder;	function	comp_468
@@ -4069,8 +3950,6 @@ c	net/minecraft/world/level/levelgen/NoiseChunk$Cache2D	net/minecraft/class_6568
 	f	Lnet/minecraft/world/level/levelgen/DensityFunction;	function	field_36599
 c	net/minecraft/world/level/levelgen/NoiseChunk$CacheOnce	net/minecraft/class_6568$class_6950
 	f	Lnet/minecraft/world/level/levelgen/DensityFunction;	function	field_36606
-c	net/minecraft/world/level/levelgen/NoiseChunk$NoiseInterpolator	net/minecraft/class_6568$class_5917
-	f	D	value	field_34624
 c	net/minecraft/world/level/levelgen/NoiseSettings	net/minecraft/class_5309
 	f	I	minY	comp_173
 	m	()I	minY	comp_173
@@ -4099,9 +3978,6 @@ c	net/minecraft/world/level/levelgen/VerticalAnchor$Absolute	net/minecraft/class
 	m	()I	y	comp_508
 c	net/minecraft/world/level/levelgen/WorldDimensions	net/minecraft/class_7723
 	m	(Lnet/minecraft/resources/ResourceKey;)Ljava/util/Optional;	get	method_45514
-c	net/minecraft/world/level/levelgen/WorldDimensions$1Entry	net/minecraft/class_7723$class_7724
-	f	Lnet/minecraft/world/level/dimension/LevelStem;	value	comp_1016
-	m	()Lnet/minecraft/world/level/dimension/LevelStem;	value	comp_1016
 c	net/minecraft/world/level/levelgen/WorldGenerationContext	net/minecraft/class_5868
 	f	I	minY	field_34030
 c	net/minecraft/world/level/levelgen/WorldgenRandom	net/minecraft/class_2919
@@ -4113,8 +3989,6 @@ c	net/minecraft/world/level/levelgen/blending/BlendingData	net/minecraft/class_6
 	m	(I)I	getZ	method_39352
 c	net/minecraft/world/level/levelgen/blockpredicates/BlockPredicateType	net/minecraft/class_6647
 	m	(Ljava/lang/String;Lcom/mojang/serialization/Codec;)Lnet/minecraft/world/level/levelgen/blockpredicates/BlockPredicateType;	register	method_38889
-c	net/minecraft/world/level/levelgen/blockpredicates/MatchingBlocksPredicate	net/minecraft/class_6649
-	f	Lnet/minecraft/core/HolderSet;	blocks	field_35063
 c	net/minecraft/world/level/levelgen/blockpredicates/WouldSurvivePredicate	net/minecraft/class_6681
 	f	Lnet/minecraft/world/level/block/state/BlockState;	state	field_35162
 c	net/minecraft/world/level/levelgen/carver/CarverConfiguration	net/minecraft/class_5871
@@ -4203,7 +4077,6 @@ c	net/minecraft/world/level/levelgen/flat/FlatLevelGeneratorSettings	net/minecra
 c	net/minecraft/world/level/levelgen/heightproviders/BiasedToBottomHeight	net/minecraft/class_6120
 	m	(Lnet/minecraft/world/level/levelgen/VerticalAnchor;Lnet/minecraft/world/level/levelgen/VerticalAnchor;I)Lnet/minecraft/world/level/levelgen/heightproviders/BiasedToBottomHeight;	of	method_35377
 c	net/minecraft/world/level/levelgen/heightproviders/ConstantHeight	net/minecraft/class_6121
-	f	Lnet/minecraft/world/level/levelgen/VerticalAnchor;	value	field_31538
 	m	()Lnet/minecraft/world/level/levelgen/VerticalAnchor;	getValue	method_35385
 	m	(Lnet/minecraft/world/level/levelgen/VerticalAnchor;)Lnet/minecraft/world/level/levelgen/heightproviders/ConstantHeight;	of	method_35383
 c	net/minecraft/world/level/levelgen/heightproviders/HeightProvider	net/minecraft/class_6122
@@ -4364,10 +4237,6 @@ c	net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate	
 	m	(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Rotation;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Mirror;)Lnet/minecraft/world/level/levelgen/structure/BoundingBox;	getBoundingBox	method_27267
 	m	(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Rotation;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/Mirror;Lnet/minecraft/core/Vec3i;)Lnet/minecraft/world/level/levelgen/structure/BoundingBox;	getBoundingBox	method_34400
 	m	(Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructurePlaceSettings;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/levelgen/structure/BoundingBox;	getBoundingBox	method_16187
-c	net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate$Palette	net/minecraft/class_3499$class_5162
-	f	Ljava/util/List;	blocks	field_23913
-	m	()Ljava/util/List;	blocks	method_27125
-	m	(Lnet/minecraft/world/level/block/Block;)Ljava/util/List;	blocks	method_27126
 c	net/minecraft/world/level/levelgen/structure/templatesystem/StructureTemplate$StructureBlockInfo	net/minecraft/class_3499$class_3501
 	f	Lnet/minecraft/world/level/block/state/BlockState;	state	comp_1342
 	m	()Lnet/minecraft/world/level/block/state/BlockState;	state	comp_1342
@@ -4513,7 +4382,6 @@ c	net/minecraft/world/level/storage/loot/BuiltInLootTables	net/minecraft/class_3
 	f	Lnet/minecraft/resources/ResourceLocation;	EMPTY	field_844
 	m	(Ljava/lang/String;)Lnet/minecraft/resources/ResourceLocation;	register	method_269
 	m	(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/resources/ResourceLocation;	register	method_271
-c	net/minecraft/world/level/storage/loot/IntRange	net/minecraft/class_42
 c	net/minecraft/world/level/storage/loot/LootContext	net/minecraft/class_47
 	f	Lnet/minecraft/util/RandomSource;	random	field_923
 c	net/minecraft/world/level/storage/loot/LootContext$Builder	net/minecraft/class_47$class_48
@@ -4522,8 +4390,6 @@ c	net/minecraft/world/level/storage/loot/LootContext$EntityTarget	net/minecraft/
 	f	Ljava/lang/String;	name	field_941
 c	net/minecraft/world/level/storage/loot/LootContext$EntityTarget$Serializer	net/minecraft/class_47$class_50$class_51
 c	net/minecraft/world/level/storage/loot/LootContext$VisitedEntry	net/minecraft/class_47$class_8487
-	f	Ljava/lang/Object;	value	comp_1473
-	m	()Ljava/lang/Object;	value	comp_1473
 c	net/minecraft/world/level/storage/loot/LootParams	net/minecraft/class_8567
 	f	Lnet/minecraft/server/level/ServerLevel;	level	field_44883
 c	net/minecraft/world/level/storage/loot/LootParams$Builder	net/minecraft/class_8567$class_8568
@@ -4564,8 +4430,6 @@ c	net/minecraft/world/level/storage/loot/functions/CopyBlockState$Builder	net/mi
 c	net/minecraft/world/level/storage/loot/functions/CopyNameFunction$NameSource	net/minecraft/class_101$class_102
 	f	Ljava/lang/String;	name	field_1025
 	f	Lnet/minecraft/world/level/storage/loot/functions/CopyNameFunction$NameSource;	BLOCK_ENTITY	field_1023
-c	net/minecraft/world/level/storage/loot/functions/CopyNbtFunction$Builder	net/minecraft/class_3837$class_3838
-	f	Ljava/util/List;	ops	field_17018
 c	net/minecraft/world/level/storage/loot/functions/CopyNbtFunction$MergeStrategy	net/minecraft/class_3837$class_3841
 	f	Ljava/lang/String;	name	field_17035
 	m	(Lnet/minecraft/nbt/Tag;Lnet/minecraft/commands/arguments/NbtPathArgument$NbtPath;Ljava/util/List;)V	merge	method_16864
@@ -4576,8 +4440,6 @@ c	net/minecraft/world/level/storage/loot/functions/LootItemFunction	net/minecraf
 c	net/minecraft/world/level/storage/loot/functions/LootItemFunctionType	net/minecraft/class_5339
 c	net/minecraft/world/level/storage/loot/functions/LootItemFunctions	net/minecraft/class_131
 	m	(Ljava/lang/String;Lnet/minecraft/world/level/storage/loot/Serializer;)Lnet/minecraft/world/level/storage/loot/functions/LootItemFunctionType;	register	method_29323
-c	net/minecraft/world/level/storage/loot/functions/LootingEnchantFunction	net/minecraft/class_125
-	f	Lnet/minecraft/world/level/storage/loot/providers/number/NumberProvider;	value	field_1082
 c	net/minecraft/world/level/storage/loot/functions/SetAttributesFunction$Modifier	net/minecraft/class_137$class_138
 	f	Ljava/lang/String;	name	field_1107
 c	net/minecraft/world/level/storage/loot/functions/SetAttributesFunction$ModifierBuilder	net/minecraft/class_137$class_6156
@@ -4589,7 +4451,6 @@ c	net/minecraft/world/level/storage/loot/functions/SetEnchantmentsFunction	net/m
 c	net/minecraft/world/level/storage/loot/functions/SetEnchantmentsFunction$Builder	net/minecraft/class_5642$class_6158
 	f	Z	add	field_31865
 c	net/minecraft/world/level/storage/loot/functions/SetItemCountFunction	net/minecraft/class_141
-	f	Lnet/minecraft/world/level/storage/loot/providers/number/NumberProvider;	value	field_1114
 	f	Z	add	field_27909
 c	net/minecraft/world/level/storage/loot/functions/SetItemDamageFunction	net/minecraft/class_149
 	f	Z	add	field_27910
@@ -4600,7 +4461,6 @@ c	net/minecraft/world/level/storage/loot/parameters/LootContextParam	net/minecra
 	m	()Lnet/minecraft/resources/ResourceLocation;	getName	method_746
 c	net/minecraft/world/level/storage/loot/parameters/LootContextParamSet	net/minecraft/class_176
 c	net/minecraft/world/level/storage/loot/parameters/LootContextParamSets	net/minecraft/class_173
-	f	Lnet/minecraft/world/level/storage/loot/parameters/LootContextParamSet;	COMMAND	field_20761
 	f	Lnet/minecraft/world/level/storage/loot/parameters/LootContextParamSet;	EMPTY	field_1175
 	m	(Ljava/lang/String;Ljava/util/function/Consumer;)Lnet/minecraft/world/level/storage/loot/parameters/LootContextParamSet;	register	method_759
 	m	(Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/world/level/storage/loot/parameters/LootContextParamSet;	get	method_757
@@ -4624,10 +4484,6 @@ c	net/minecraft/world/level/storage/loot/predicates/LootItemCondition	net/minecr
 c	net/minecraft/world/level/storage/loot/predicates/LootItemConditionType	net/minecraft/class_5342
 c	net/minecraft/world/level/storage/loot/predicates/LootItemConditions	net/minecraft/class_217
 	m	(Ljava/lang/String;Lnet/minecraft/world/level/storage/loot/Serializer;)Lnet/minecraft/world/level/storage/loot/predicates/LootItemConditionType;	register	method_29327
-c	net/minecraft/world/level/storage/loot/predicates/TimeCheck	net/minecraft/class_4571
-	f	Lnet/minecraft/world/level/storage/loot/IntRange;	value	field_20768
-c	net/minecraft/world/level/storage/loot/predicates/TimeCheck$Builder	net/minecraft/class_4571$class_6164
-	f	Lnet/minecraft/world/level/storage/loot/IntRange;	value	field_31872
 c	net/minecraft/world/level/storage/loot/providers/nbt/ContextNbtProvider	net/minecraft/class_5646
 	f	Lnet/minecraft/world/level/storage/loot/providers/nbt/ContextNbtProvider;	BLOCK_ENTITY	field_27914
 c	net/minecraft/world/level/storage/loot/providers/nbt/ContextNbtProvider$Getter	net/minecraft/class_5646$class_5648
@@ -4638,8 +4494,6 @@ c	net/minecraft/world/level/storage/loot/providers/nbt/NbtProvider	net/minecraft
 	m	(Lnet/minecraft/world/level/storage/loot/LootContext;)Lnet/minecraft/nbt/Tag;	get	method_32440
 c	net/minecraft/world/level/storage/loot/providers/nbt/NbtProviders	net/minecraft/class_5652
 	m	(Ljava/lang/String;Lnet/minecraft/world/level/storage/loot/Serializer;)Lnet/minecraft/world/level/storage/loot/providers/nbt/LootNbtProviderType;	register	method_32443
-c	net/minecraft/world/level/storage/loot/providers/number/ConstantValue	net/minecraft/class_44
-	f	F	value	field_922
 c	net/minecraft/world/level/storage/loot/providers/number/LootNumberProviderType	net/minecraft/class_5657
 c	net/minecraft/world/level/storage/loot/providers/number/NumberProvider	net/minecraft/class_5658
 	m	()Lnet/minecraft/world/level/storage/loot/providers/number/LootNumberProviderType;	getType	method_365
@@ -4740,7 +4594,5 @@ c	net/minecraft/world/ticks/ScheduledTick	net/minecraft/class_6760
 c	net/minecraft/world/ticks/ScheduledTick$1	net/minecraft/class_6760$1
 	m	(Lnet/minecraft/world/ticks/ScheduledTick;)I	hashCode	method_39413
 	m	(Lnet/minecraft/world/ticks/ScheduledTick;Lnet/minecraft/world/ticks/ScheduledTick;)Z	equals	method_39414
-c	net/minecraft/world/ticks/SerializableTickContainer	net/minecraft/class_6761
 c	net/minecraft/world/ticks/TickPriority	net/minecraft/class_1953
-	f	I	value	field_9308
 	m	()I	getValue	method_8681
