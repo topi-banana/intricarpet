@@ -267,3 +267,19 @@ jobs:
         run: |
           mapfile -t sources < <(git ls-files -- '*.java')
           jals fmt --check "${sources[@]}"
+
+  refmaps:
+    # One job, no matrix and no toolchain: a refmap follows from two things that are both tracked —
+    # the committed mapping set and the source tree — so re-deriving all thirteen is a read of files
+    # in the checkout and nothing else. No jals, no JDK, no network.
+    #
+    # What it catches is the one way a generated file goes wrong between regenerations: a source tree
+    # that has moved on from it. Add an injector, rename a selector, shadow a member with no line to
+    # copy, and the jar still builds and still passes `check-remap.py` — every reference in its
+    # bytecode really is intermediary-named — while Mixin fails to resolve the target at apply time.
+    # That failure has no earlier signal than this job.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the refmaps are what the source says
+        run: python3 mappings/regenerate.py --check

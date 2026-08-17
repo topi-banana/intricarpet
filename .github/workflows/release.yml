@@ -53,12 +53,22 @@ jobs:
           echo "${JALS_VERSION} -> ${id}"
           echo "id=${id}" >>"$GITHUB_OUTPUT"
 
+  refmaps:
+    # `ci.yml`'s check, repeated here for the reason `check-remap.py` is: a jar built from a stale
+    # refmap compiles, packages and passes every other gate, and fails when Mixin applies it. It
+    # gates the build rather than following it — no toolchain, no network, so it costs a checkout.
+    name: check the refmaps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: python3 mappings/regenerate.py --check
+
   build:
     # The same fifteen cells as `ci.yml`, built as releases: `JALS_BUILD_RELEASE` drops the
     # `-SNAPSHOT`/`+build.N` suffix `build.rhai` otherwise puts in `fabric.mod.json`.
     #
     # Every cell produces a jar, so every cell uploads one and a failure anywhere fails the release.
-    needs: jals
+    needs: [jals, refmaps]
     name: ${{ matrix.minecraft }}
     runs-on: ubuntu-latest
     strategy:
