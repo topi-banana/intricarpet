@@ -11,7 +11,8 @@
         "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;F)V": "Lnet/minecraft/class_2248;method_9554(Lnet/minecraft/class_1937;Lnet/minecraft/class_2680;Lnet/minecraft/class_2338;Lnet/minecraft/class_1297;F)V",
         "checkFallDamage": "method_5623",
         "checkInsideBlocks": "method_5852",
-        "isIgnoringBlockTriggers": "method_5696"
+        "isIgnoringBlockTriggers": "method_5696",
+        "teleportToWithTicket": "method_20620"
       },
       "me/lntricate/intricarpet/mixins/interactions/EntitySelectorMixin": {
         "pushableBy": "method_5911"
@@ -53,7 +54,8 @@
       "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;F)V": "Lnet/minecraft/class_2248;method_9554(Lnet/minecraft/class_1937;Lnet/minecraft/class_2680;Lnet/minecraft/class_2338;Lnet/minecraft/class_1297;F)V",
       "checkFallDamage": "method_5623",
       "checkInsideBlocks": "method_5852",
-      "isIgnoringBlockTriggers": "method_5696"
+      "isIgnoringBlockTriggers": "method_5696",
+      "teleportToWithTicket": "method_20620"
     },
     "me/lntricate/intricarpet/mixins/interactions/EntitySelectorMixin": {
       "pushableBy": "method_5911"

@@ -2693,6 +2693,7 @@ c	net/minecraft/world/entity/Entity	net/minecraft/class_1297
 	m	(D)D	getZ	method_23324
 	m	(DDD)V	push	method_5762
 	m	(DDD)V	setDeltaMovement	method_18800
+	m	(DDD)V	teleportToWithTicket	method_20620
 	m	(DZLnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)V	checkFallDamage	method_5623
 	m	(Lnet/minecraft/world/damagesource/DamageSource;F)Z	hurt	method_5643
 	m	(Lnet/minecraft/world/entity/Entity$RemovalReason;)V	remove	method_5650

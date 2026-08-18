@@ -92,7 +92,7 @@ public class EntityMixin {
     }
 
     #[cfg(not(feature = "since-1.21"))]
-    @Inject(method = "teleportToWithTicket", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "teleportToWithTicket", at = @At("HEAD"), cancellable = true)
     private void teleportToWithTicket(double x, double y, double z, CallbackInfo ci) {
         if ((Entity) (Object) this instanceof IServerPlayer player
             && !player.getInteraction(Interaction.CHUNKLOADING))
