@@ -181,16 +181,24 @@ jobs:
           if-no-files-found: error
 
   lint:
-    # The gate that holds for every release. For each selection the dialect frontend has to accept
-    # every `#[cfg]` in the tree: a predicate that is malformed, an attribute on a construct that
-    # cannot host one, an attribute after a modifier or annotation. `jals-lint` reports exactly that
-    # set under the fixed `cfg` rule, deliberately outside the per-rule severity gate — a
-    # build-blocking error is not a configurable lint — so `jalslint.toml` cannot switch it off.
+    # The gate that holds for every release, and it holds for the whole rule set: there is no
+    # `jalslint.toml`, so every rule runs at its built-in severity and none is turned down. `jals
+    # lint` exits non-zero on any finding that is not a hint, which means a `warn` rule fails this
+    # job exactly as an `error` one does — `unused-local`, `naming-convention`, `missing-braces` and
+    # the rest are gates here, not advice.
+    #
+    # Part of what it catches is the *conversion*, once per selection: a `#[cfg]` predicate that is
+    # malformed, an attribute on a construct that cannot host one, an attribute after a modifier or
+    # annotation. `jals-lint` reports those under the fixed `cfg` rule, deliberately outside the
+    # per-rule severity gate — a build-blocking error is not a configurable lint — so no config file
+    # could have switched that half off even when one existed.
     #
     # This is what replaced the preprocessor, checked once per release rather than once. It runs
     # offline against whatever the verified cache holds, which is nothing here: resolving fifteen
     # game jars to lint a tree that has already been built by the job above would double the
-    # matrix's cost for an answer `javac` gives better.
+    # matrix's cost for an answer `javac` gives better. `cannot-resolve` therefore has no classpath
+    # to be an authority over and reports what it cannot see; that is a real cost of linting
+    # offline, and it is accepted rather than configured away.
     needs: jals
     name: lint (${{ matrix.minecraft }})
     runs-on: ubuntu-latest

@@ -59,6 +59,14 @@ checks it with `jals fmt --check` over the tracked `.java` files. `jals fmt` rea
 for a release, but for the one rule that would write dialect syntax — and never resolves a name, so
 it needs neither a JDK nor a game jar.
 
+`jals lint` is the same shape, and now for the same reason: there is no `jalslint.toml` either, so
+every rule runs at its built-in severity with none turned down. `jals lint` exits non-zero on any
+finding that is not a hint, so a `warn` rule fails CI exactly as an `error` one does. Two
+consequences are worth knowing before running it: the linter is offline and has no classpath, so
+`cannot-resolve` reports names it cannot see rather than names this source got wrong; and a Mixin
+injector's signature is fixed by the framework, so `unused-local` flags parameters the method is not
+free to drop. Both are real findings of rules that are on, not exceptions the config hides.
+
 Exactly one version feature must be selected — there is deliberately no default, because a release
 chooses the game jar, the Carpet jar and every conditional branch at once. The supported releases
 are the version features in `jals.toml`:
