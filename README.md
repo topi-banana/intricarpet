@@ -64,8 +64,10 @@ every rule runs at its built-in severity with none turned down. `jals lint` exit
 finding that is not a hint, so a `warn` rule fails CI exactly as an `error` one does. Two
 consequences are worth knowing before running it: the linter is offline and has no classpath, so
 `cannot-resolve` reports names it cannot see rather than names this source got wrong; and a Mixin
-injector's signature is fixed by the framework, so `unused-local` flags parameters the method is not
-free to drop. Both are real findings of rules that are on, not exceptions the config hides.
+injector's signature is fixed by the framework, so `unused-variables` flags parameters the method is
+not free to drop. Both are real findings of rules that are on, not exceptions the config hides. What
+silences one finding without turning a rule off for the tree is `@SuppressWarnings`, which jals reads
+from the source — a rule name, or the section it is configured under.
 
 Exactly one version feature must be selected — there is deliberately no default, because a release
 chooses the game jar, the Carpet jar and every conditional branch at once. The supported releases

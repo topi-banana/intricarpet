@@ -184,8 +184,9 @@ jobs:
     # The gate that holds for every release, and it holds for the whole rule set: there is no
     # `jalslint.toml`, so every rule runs at its built-in severity and none is turned down. `jals
     # lint` exits non-zero on any finding that is not a hint, which means a `warn` rule fails this
-    # job exactly as an `error` one does — `unused-local`, `naming-convention`, `missing-braces` and
-    # the rest are gates here, not advice.
+    # job exactly as an `error` one does — `unused-variables`, `naming-convention`, `missing-braces`
+    # and the rest are gates here, not advice. Per-site suppression is `@SuppressWarnings`, read
+    # from the source; that is the escape hatch, not a config file.
     #
     # Part of what it catches is the *conversion*, once per selection: a `#[cfg]` predicate that is
     # malformed, an attribute on a construct that cannot host one, an attribute after a modifier or
