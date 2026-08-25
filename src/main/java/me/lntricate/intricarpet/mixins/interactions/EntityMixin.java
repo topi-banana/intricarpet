@@ -40,12 +40,12 @@ public class EntityMixin {
                 target =
                     "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;F)V"))
     private boolean shouldFallOn(
-        Block instance,
-        Level level,
-        BlockState blockState,
-        BlockPos blockPos,
-        Entity entity,
-        float fallDistance) {
+        Block _instance,
+        Level _level,
+        BlockState _blockState,
+        BlockPos _blockPos,
+        Entity _entity,
+        float _fallDistance) {
         return !noBlockInteraction();
     }
 
@@ -58,12 +58,12 @@ public class EntityMixin {
                 target =
                     "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;D)V"))
     private boolean shouldFallOn(
-        Block instance,
-        Level level,
-        BlockState blockState,
-        BlockPos blockPos,
-        Entity entity,
-        double fallDistance) {
+        Block _instance,
+        Level _level,
+        BlockState _blockState,
+        BlockPos _blockPos,
+        Entity _entity,
+        double _fallDistance) {
         return !noBlockInteraction();
     }
 
@@ -71,8 +71,9 @@ public class EntityMixin {
     #[cfg(not(feature = "since-1.21.6"))]
     @Inject(method = "checkInsideBlocks", at = @At("HEAD"), cancellable = true)
     private void checkInsideBlocks(CallbackInfo ci) {
-        if (noBlockInteraction())
+        if (noBlockInteraction()) {
             ci.cancel();
+        }
     }
 
     #[cfg(feature = "since-1.21.6")]
@@ -82,8 +83,9 @@ public class EntityMixin {
         at = @At("HEAD"),
         cancellable = true)
     private void checkInsideBlocks(CallbackInfo ci) {
-        if (noBlockInteraction())
+        if (noBlockInteraction()) {
             ci.cancel();
+        }
     }
 
     @ModifyReturnValue(method = "isIgnoringBlockTriggers", at = @At("RETURN"))
@@ -93,9 +95,10 @@ public class EntityMixin {
 
     #[cfg(not(feature = "since-1.21"))]
     @Inject(method = "teleportToWithTicket", at = @At("HEAD"), cancellable = true)
-    private void teleportToWithTicket(double x, double y, double z, CallbackInfo ci) {
+    private void teleportToWithTicket(double _x, double _y, double _z, CallbackInfo ci) {
         if ((Entity) (Object) this instanceof IServerPlayer player
-            && !player.getInteraction(Interaction.CHUNKLOADING))
+            && !player.getInteraction(Interaction.CHUNKLOADING)) {
             ci.cancel();
+        }
     }
 }

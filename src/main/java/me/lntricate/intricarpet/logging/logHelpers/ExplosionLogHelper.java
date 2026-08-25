@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
 
 public class ExplosionLogHelper {
-    private static Component log;
+    private static Component LOG;
 
     public static void onExplosion(Vec3 pos, long tick, boolean affectBlocks) {
         if (ExplosionHelper.isEmpty() || ExplosionHelper.isNew(pos, tick)) {
@@ -24,25 +24,25 @@ public class ExplosionLogHelper {
             logCompact(time, false);
             ExplosionHelper.registerNewPos(pos, tick, time, affectBlocks);
         } else {
-            log = null;
-            ExplosionHelper.incrementCounts(tick);
+            LOG = null;
+            ExplosionHelper.incrementCounts();
         }
     }
 
     public static List<Component> onLog(List<Component> messages, String option) {
-        if (option.equals("compact")) {
-            if (log != null)
-                messages.add(log);
+        if (option.equals("compact") && LOG != null) {
+            messages.add(LOG);
         }
+
         return messages;
     }
 
     private static void logCompact(long time, boolean endOfTick) {
-        if (ExplosionHelper.isEmpty())
+        if (ExplosionHelper.isEmpty()) {
             return;
-
+        }
         Vec3 pos = ExplosionHelper.getPos();
-        log =
+        LOG =
             Messenger.c(
                 "d " + ExplosionHelper.getCountInPos() + "x ",
                 Messenger.dblt("l", pos.x, pos.y, pos.z),
@@ -75,7 +75,7 @@ public class ExplosionLogHelper {
                             .toArray(new BaseComponent[0]);
                     });
 
-            log = null;
+            LOG = null;
         }
         ExplosionHelper.clear();
     }

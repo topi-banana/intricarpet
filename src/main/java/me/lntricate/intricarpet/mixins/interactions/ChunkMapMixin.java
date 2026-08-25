@@ -21,13 +21,13 @@ public class ChunkMapMixin implements IChunkMap {
     // 1.21.5 measures the distance from the player's position rather than from the player.
     #[cfg(feature = "since-1.21.5")]
     @Shadow
-    private static double euclideanDistanceSquared(ChunkPos chunkPos, Vec3 vec) {
+    private static double euclideanDistanceSquared(ChunkPos _chunkPos, Vec3 _vec) {
         return 0.0;
     }
 
     #[cfg(not(feature = "since-1.21.5"))]
     @Shadow
-    private static double euclideanDistanceSquared(ChunkPos chunkPos, Entity entity) {
+    private static double euclideanDistanceSquared(ChunkPos _chunkPos, Entity _entity) {
         return 0.0;
     }
 
@@ -48,25 +48,32 @@ public class ChunkMapMixin implements IChunkMap {
     public boolean anyPlayerCloseWithInteraction(ChunkPos chunkPos, Interaction interaction) {
         // 1.18 turned `PlayerMap`'s per-chunk stream into a plain collection, and 1.20.2 replaced the
         // per-chunk lookup with one over every tracked player.
-        #[cfg(feature = "since-1.20.2")] for (ServerPlayer player : playerMap.getAllPlayers())
-            if (playerValid(player, chunkPos, interaction))
+        #[cfg(feature = "since-1.20.2")] for (ServerPlayer player :
+            this.playerMap.getAllPlayers()) {
+            if (playerValid(player, chunkPos, interaction)) {
                 return true;
+            }
+        }
 
         #[cfg(
             all(feature = "since-1.18", not(feature = "since-1.20.2")))] for (ServerPlayer player :
-            playerMap.getPlayers(chunkPos.toLong()))
-            if (playerValid(player, chunkPos, interaction))
+            this.playerMap.getPlayers(chunkPos.toLong())) {
+            if (playerValid(player, chunkPos, interaction)) {
                 return true;
+            }
+        }
 
         #[cfg(feature = "since-1.18")] return false;
 
-        #[cfg(not(feature = "since-1.18"))] return playerMap.getPlayers(chunkPos.toLong())
+        #[cfg(not(feature = "since-1.18"))] return this.playerMap
+            .getPlayers(chunkPos.toLong())
             .anyMatch(player -> playerValid(player, chunkPos, interaction));
     }
 
     @Inject(method = "skipPlayer", at = @At("HEAD"), cancellable = true)
     private void skipPlayer(ServerPlayer player, CallbackInfoReturnable<Boolean> cir) {
-        if (!((IServerPlayer) player).getInteraction(Interaction.CHUNKLOADING))
+        if (!((IServerPlayer) player).getInteraction(Interaction.CHUNKLOADING)) {
             cir.setReturnValue(true);
+        }
     }
 }

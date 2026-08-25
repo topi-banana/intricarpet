@@ -2,6 +2,15 @@ package me.lntricate.intricarpet;
 
 import carpet.settings.Rule;
 
+// Carpet reads a rule's *field name* as the rule's name: `commandInteraction` is exactly what
+// `/carpet commandInteraction` is spelled, and what a `carpet.conf` line carries. So the
+// `lowerCamelCase` here is the API's demand, not this project's choice, and renaming these to
+// satisfy `naming-convention` would rename the mod's user-facing settings.
+//
+// It sits on the type rather than on each field because it is one statement of one reason, and the
+// reason holds for every rule this class declares — `optimizedTNTEdgeCases`, which exists only
+// below 26, included.
+@SuppressWarnings("naming-convention")
 public class Rules {
     @Rule(
         desc =

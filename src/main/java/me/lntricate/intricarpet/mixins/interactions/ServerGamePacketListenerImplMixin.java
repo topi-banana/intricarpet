@@ -27,9 +27,10 @@ public class ServerGamePacketListenerImplMixin {
                 value = "INVOKE",
                 target =
                     "Lnet/minecraft/server/level/ServerPlayerGameMode;useItemOn(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;"))
-    private void beforeInteractBlock(ServerboundUseItemOnPacket packet, CallbackInfo ci) {
-        if (!((IServerPlayer) player).getInteraction(Interaction.UPDATES))
+    private void beforeInteractBlock(ServerboundUseItemOnPacket _packet, CallbackInfo _ci) {
+        if (!((IServerPlayer) this.player).getInteraction(Interaction.UPDATES)) {
             CarpetSettings.impendingFillSkipUpdates.set(true);
+        }
     }
 
     @Inject(
@@ -40,7 +41,7 @@ public class ServerGamePacketListenerImplMixin {
                 target =
                     "Lnet/minecraft/server/level/ServerPlayerGameMode;useItemOn(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;",
                 shift = Shift.AFTER))
-    private void afterInteractBlock(ServerboundUseItemOnPacket packet, CallbackInfo ci) {
+    private void afterInteractBlock(ServerboundUseItemOnPacket _packet, CallbackInfo _ci) {
         CarpetSettings.impendingFillSkipUpdates.set(false);
     }
 
@@ -51,9 +52,10 @@ public class ServerGamePacketListenerImplMixin {
                 value = "INVOKE",
                 target =
                     "Lnet/minecraft/server/level/ServerPlayerGameMode;useItem(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
-    private void beforeInteractItem(ServerboundUseItemPacket packet, CallbackInfo ci) {
-        if (!((IServerPlayer) player).getInteraction(Interaction.UPDATES))
+    private void beforeInteractItem(ServerboundUseItemPacket _packet, CallbackInfo _ci) {
+        if (!((IServerPlayer) this.player).getInteraction(Interaction.UPDATES)) {
             CarpetSettings.impendingFillSkipUpdates.set(true);
+        }
     }
 
     @Inject(
@@ -64,32 +66,33 @@ public class ServerGamePacketListenerImplMixin {
                 target =
                     "Lnet/minecraft/server/level/ServerPlayerGameMode;useItem(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;",
                 shift = Shift.AFTER))
-    private void afterInteractItem(ServerboundUseItemPacket packet, CallbackInfo ci) {
+    private void afterInteractItem(ServerboundUseItemPacket _packet, CallbackInfo _ci) {
         CarpetSettings.impendingFillSkipUpdates.set(false);
     }
 
     // 1.19 added the `Direction` argument's sequence number, so the descriptor the two injectors
     // below target gained a second `int`.
     #[cfg(feature = "since-1.19")]
-    private static final String handleBlockBreakAction =
+    private static final String HANDLE_BLOCK_BREAK_ACTION =
         "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;II)V";
 
     #[cfg(not(feature = "since-1.19"))]
-    private static final String handleBlockBreakAction =
+    private static final String HANDLE_BLOCK_BREAK_ACTION =
         "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;I)V";
 
     @Inject(
         method = "handlePlayerAction",
-        at = @At(value = "INVOKE", target = handleBlockBreakAction))
-    private void beforeBreakBlock(ServerboundPlayerActionPacket packet, CallbackInfo ci) {
-        if (!((IServerPlayer) player).getInteraction(Interaction.UPDATES))
+        at = @At(value = "INVOKE", target = HANDLE_BLOCK_BREAK_ACTION))
+    private void beforeBreakBlock(ServerboundPlayerActionPacket _packet, CallbackInfo _ci) {
+        if (!((IServerPlayer) this.player).getInteraction(Interaction.UPDATES)) {
             CarpetSettings.impendingFillSkipUpdates.set(true);
+        }
     }
 
     @Inject(
         method = "handlePlayerAction",
-        at = @At(value = "INVOKE", target = handleBlockBreakAction, shift = Shift.AFTER))
-    private void afterBreakBlock(ServerboundPlayerActionPacket packet, CallbackInfo ci) {
+        at = @At(value = "INVOKE", target = HANDLE_BLOCK_BREAK_ACTION, shift = Shift.AFTER))
+    private void afterBreakBlock(ServerboundPlayerActionPacket _packet, CallbackInfo _ci) {
         CarpetSettings.impendingFillSkipUpdates.set(false);
     }
 }

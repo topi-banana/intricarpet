@@ -20,7 +20,7 @@ public class LoggerRegistry {
                 def,
                 options,
                 strictOptions);
-        } catch (NoSuchFieldException e) {
+        } catch (NoSuchFieldException _e) {
             throw new RuntimeException("Failed to create logger " + logName);
         }
     }

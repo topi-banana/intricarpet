@@ -26,7 +26,7 @@ public class InteractionCommand {
                     (player) -> SettingsManager.canUseCommand(player, Rules.commandInteraction))
                 .then(
                     argument("interaction", StringArgumentType.word())
-                        .suggests((c, b) -> suggest(Interaction.commandKeys(), b))
+                        .suggests((_c, b) -> suggest(Interaction.commandKeys(), b))
                         .then(
                             argument("value", BoolArgumentType.bool())
                                 .executes(InteractionCommand::setInteraction))
@@ -50,7 +50,7 @@ public class InteractionCommand {
             player.setInteraction(i, value);
             Messenger.m(c.getSource(), "g Interaction ", i(i), "g  set to ", v(value));
             return 0;
-        } catch (CommandSyntaxException e) {
+        } catch (CommandSyntaxException _e) {
             Messenger.m(c.getSource(), "r Interaction command must be executed by a player");
             return 1;
         }
@@ -67,7 +67,7 @@ public class InteractionCommand {
                 "g  is currently set to ",
                 v(player.getInteraction(i)));
             return 0;
-        } catch (CommandSyntaxException e) {
+        } catch (CommandSyntaxException _e) {
             Messenger.m(c.getSource(), "r Interaction command must be executed by a player");
             return 1;
         }
@@ -76,10 +76,11 @@ public class InteractionCommand {
     private static int getInteractions(CommandContext<CommandSourceStack> c) {
         try {
             IServerPlayer player = (IServerPlayer) c.getSource().getPlayerOrException();
-            for (Map.Entry<Interaction, Boolean> entry : player.getInteractions().entrySet())
+            for (Map.Entry<Interaction, Boolean> entry : player.getInteractions().entrySet()) {
                 Messenger.m(c.getSource(), i(entry.getKey()), "g : ", v(entry.getValue()));
+            }
             return 0;
-        } catch (CommandSyntaxException e) {
+        } catch (CommandSyntaxException _e) {
             Messenger.m(c.getSource(), "r Interaction command must be executed by a player");
             return 1;
         }

@@ -14,23 +14,23 @@ public class ServerPlayerMixin implements IServerPlayer {
     private Map<Interaction, Boolean> interactions;
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void onInit(CallbackInfo ci) {
-        interactions = Interaction.get(((ServerPlayer) (Object) this).getUUID());
+    private void onInit(CallbackInfo _ci) {
+        this.interactions = Interaction.get(((ServerPlayer) (Object) this).getUUID());
     }
 
     @Override
     public boolean getInteraction(Interaction key) {
-        return interactions.get(key);
+        return this.interactions.get(key);
     }
 
     @Override
     public Map<Interaction, Boolean> getInteractions() {
-        return interactions;
+        return this.interactions;
     }
 
     @Override
     public void setInteraction(Interaction key, boolean value) {
-        interactions.put(key, value);
+        this.interactions.put(key, value);
         Interaction.set(((ServerPlayer) (Object) this).getUUID(), key, value);
     }
 }

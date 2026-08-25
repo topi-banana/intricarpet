@@ -30,17 +30,17 @@ public class ServerChunkCacheMixin {
     // `tickChunks` gained a profiler and a chunk list in 1.21.2, and lost the list again in 1.21.5.
     #[cfg(feature = "since-1.21.5")]
     @Unique
-    private static final String targetMethod =
+    private static final String TARGET_METHOD =
         "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;J)V";
 
     #[cfg(all(feature = "since-1.21.2", not(feature = "since-1.21.5")))]
     @Unique
-    private static final String targetMethod =
+    private static final String TARGET_METHOD =
         "tickChunks(Lnet/minecraft/util/profiling/ProfilerFiller;JLjava/util/List;)V";
 
     #[cfg(all(feature = "since-1.18", not(feature = "since-1.21.2")))]
     @Unique
-    private static final String targetMethod = "tickChunks()V";
+    private static final String TARGET_METHOD = "tickChunks()V";
 
     #[cfg(feature = "since-1.21.5")]
     @WrapWithCondition(
@@ -50,35 +50,35 @@ public class ServerChunkCacheMixin {
                 value = "INVOKE",
                 target =
                     "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;Ljava/util/List;)V"))
-    private boolean shouldSpawnMobs(ServerLevel a, LevelChunk levelChunk, SpawnState b, List c) {
-        return ((IChunkMap) chunkMap)
+    private boolean shouldSpawnMobs(ServerLevel _a, LevelChunk levelChunk, SpawnState _b, List _c) {
+        return ((IChunkMap) this.chunkMap)
             .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING);
     }
 
     #[cfg(all(feature = "since-1.21.2", not(feature = "since-1.21.5")))]
     @WrapWithCondition(
-        method = targetMethod,
+        method = TARGET_METHOD,
         at =
             @At(
                 value = "INVOKE",
                 target =
                     "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;Ljava/util/List;)V"))
-    private boolean shouldSpawnMobs(ServerLevel a, LevelChunk levelChunk, SpawnState b, List c) {
-        return ((IChunkMap) chunkMap)
+    private boolean shouldSpawnMobs(ServerLevel _a, LevelChunk levelChunk, SpawnState _b, List _c) {
+        return ((IChunkMap) this.chunkMap)
             .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING);
     }
 
     #[cfg(all(feature = "since-1.18", not(feature = "since-1.21.2")))]
     @WrapWithCondition(
-        method = targetMethod,
+        method = TARGET_METHOD,
         at =
             @At(
                 value = "INVOKE",
                 target =
                     "Lnet/minecraft/world/level/NaturalSpawner;spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)V"))
     private boolean shouldSpawnMobs(
-        ServerLevel a, LevelChunk levelChunk, SpawnState b, boolean c, boolean d, boolean e) {
-        return ((IChunkMap) chunkMap)
+        ServerLevel _a, LevelChunk levelChunk, SpawnState _b, boolean _c, boolean _d, boolean _e) {
+        return ((IChunkMap) this.chunkMap)
             .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING);
     }
 
@@ -88,7 +88,7 @@ public class ServerChunkCacheMixin {
     // `ChunkMapAccessor` is the Mixin-native way to reach it and needs no build-tool support.
     #[cfg(feature = "since-1.21.5")]
     @Redirect(
-        method = targetMethod,
+        method = TARGET_METHOD,
         at =
             @At(
                 value = "INVOKE",
@@ -115,14 +115,14 @@ public class ServerChunkCacheMixin {
 
     #[cfg(all(feature = "since-1.18", not(feature = "since-1.21.5")))]
     @WrapWithCondition(
-        method = targetMethod,
+        method = TARGET_METHOD,
         at =
             @At(
                 value = "INVOKE",
                 target =
                     "Lnet/minecraft/server/level/ServerLevel;tickChunk(Lnet/minecraft/world/level/chunk/LevelChunk;I)V"))
-    private boolean shouldRandomTick(ServerLevel instance, LevelChunk levelChunk, int i) {
-        return ((IChunkMap) chunkMap)
+    private boolean shouldRandomTick(ServerLevel _instance, LevelChunk levelChunk, int _i) {
+        return ((IChunkMap) this.chunkMap)
             .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.RANDOMTICKS);
     }
 }

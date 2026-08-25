@@ -3,61 +3,62 @@ package me.lntricate.intricarpet.helpers;
 import net.minecraft.world.phys.Vec3;
 
 public class ExplosionHelper {
-    private static Vec3 pos = null;
-    private static int countInPos = 0;
-    private static int countInTick = 0;
-    private static long tick = 0;
-    private static long time = 0;
-    private static boolean affectBlocks;
+    private static Vec3 POS = null;
+    private static int COUNT_IN_POS = 0;
+    private static int COUNT_IN_TICK = 0;
+    private static long TICK = 0;
+    private static long TIME = 0;
+    private static boolean AFFECT_BLOCKS;
 
     public static Vec3 getPos() {
-        return pos;
+        return POS;
     }
 
     public static int getCountInPos() {
-        return countInPos;
+        return COUNT_IN_POS;
     }
 
     public static int getCountInTick() {
-        return countInTick;
+        return COUNT_IN_TICK;
     }
 
     public static long getTick() {
-        return tick;
+        return TICK;
     }
 
     public static long getTime() {
-        return time;
+        return TIME;
     }
 
     public static boolean getAffectBlocks() {
-        return affectBlocks;
+        return AFFECT_BLOCKS;
     }
 
-    public static boolean isNew(Vec3 pos_, long tick_) {
-        return tick != tick_ || !pos.equals(pos_);
+    public static boolean isNew(Vec3 newPos, long newTick) {
+        return TICK != newTick || !POS.equals(newPos);
     }
 
     public static boolean isEmpty() {
-        return pos == null;
+        return POS == null;
     }
 
-    public static void registerNewPos(Vec3 pos_, long tick_, long time_, boolean affectBlocks_) {
-        pos = pos_;
-        tick = tick_;
-        countInPos = 1;
-        countInTick += 1;
-        time = time_;
-        affectBlocks = affectBlocks_;
+    public static void registerNewPos(
+        Vec3 newPos, long newTick, long newTime, boolean newAffectBlocks) {
+        POS = newPos;
+        TICK = newTick;
+        COUNT_IN_POS = 1;
+        COUNT_IN_TICK += 1;
+        TIME = newTime;
+        AFFECT_BLOCKS = newAffectBlocks;
     }
 
     public static void clear() {
-        pos = null;
-        countInTick = 0;
+        POS = null;
+        COUNT_IN_TICK = 0;
     }
 
-    public static void incrementCounts(long tick) {
-        countInPos++;
-        countInTick++;
+    public static void incrementCounts() {
+        COUNT_IN_POS++;
+        COUNT_IN_TICK++;
     }
 }

@@ -15,7 +15,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class EntitySelectorMixin {
     @Inject(method = "pushableBy", at = @At("HEAD"), cancellable = true)
     private static void pushableBy(Entity entity, CallbackInfoReturnable<Predicate<Entity>> cir) {
-        if (entity instanceof IServerPlayer player && !player.getInteraction(Interaction.ENTITIES))
+        if (entity instanceof IServerPlayer player
+            && !player.getInteraction(Interaction.ENTITIES)) {
             cir.setReturnValue(Predicates.alwaysFalse());
+        }
     }
 }

@@ -22,9 +22,9 @@ public class ExplosionLogHelperMixin {
     private boolean affectBlocks;
 
     @Inject(method = "onExplosionDone", at = @At("HEAD"), remap = false)
-    private void onExplosionDone(long gametime, CallbackInfo ci) {
+    private void onExplosionDone(long gametime, CallbackInfo _ci) {
         me.lntricate.intricarpet.logging.logHelpers.ExplosionLogHelper.onExplosion(
-            pos, gametime, affectBlocks);
+            this.pos, gametime, this.affectBlocks);
     }
 
     private String option = "";
@@ -33,14 +33,15 @@ public class ExplosionLogHelperMixin {
     // from `$1` to `$0`, and the surviving one now yields the whole message array.
     #[cfg(feature = "since-26")]
     @Inject(method = "lambda$onExplosionDone$0", at = @At("HEAD"), remap = false)
-    private void getOption(long gametime, String option_, CallbackInfoReturnable<Component[]> cir) {
-        option = option_;
+    private void getOption(
+        long _gametime, String option, CallbackInfoReturnable<Component[]> _cir) {
+        this.option = option;
     }
 
     #[cfg(not(feature = "since-26"))]
     @Inject(method = "lambda$onExplosionDone$1", at = @At("HEAD"), remap = false)
-    private void getOption(long gametime, String option_, CallbackInfoReturnable<Component> cir) {
-        option = option_;
+    private void getOption(long _gametime, String option, CallbackInfoReturnable<Component> _cir) {
+        this.option = option;
     }
 
     #[cfg(feature = "since-26")]
@@ -51,9 +52,9 @@ public class ExplosionLogHelperMixin {
                 value = "INVOKE",
                 target = "Ljava/util/List;toArray([Ljava/lang/Object;)[Ljava/lang/Object;",
                 remap = false))
-    private List<Component> addLoggers(List<Component> messages, Object[] dummy) {
+    private List<Component> addLoggers(List<Component> messages, Object[] _dummy) {
         return me.lntricate.intricarpet.logging.logHelpers.ExplosionLogHelper.onLog(
-            messages, option);
+            messages, this.option);
     }
 
     #[cfg(not(feature = "since-26"))]
@@ -64,8 +65,8 @@ public class ExplosionLogHelperMixin {
                 value = "INVOKE",
                 target = "Ljava/util/List;toArray([Ljava/lang/Object;)[Ljava/lang/Object;",
                 remap = false))
-    private List<Component> addLoggers(List<Component> messages, Object[] dummy) {
+    private List<Component> addLoggers(List<Component> messages, Object[] _dummy) {
         return me.lntricate.intricarpet.logging.logHelpers.ExplosionLogHelper.onLog(
-            messages, option);
+            messages, this.option);
     }
 }

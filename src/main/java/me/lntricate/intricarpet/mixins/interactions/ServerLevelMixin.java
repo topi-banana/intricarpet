@@ -21,9 +21,10 @@ public class ServerLevelMixin {
         method = "tickChunk(Lnet/minecraft/world/level/chunk/LevelChunk;I)V",
         at = @At("HEAD"),
         cancellable = true)
-    private void shouldRandomTick(LevelChunk levelChunk, int i, CallbackInfo ci) {
+    private void shouldRandomTick(LevelChunk levelChunk, int _i, CallbackInfo ci) {
         if (!((IChunkMap) ((ServerLevel) (Object) this).getChunkSource().chunkMap)
-            .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.RANDOMTICKS))
+            .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.RANDOMTICKS)) {
             ci.cancel();
+        }
     }
 }

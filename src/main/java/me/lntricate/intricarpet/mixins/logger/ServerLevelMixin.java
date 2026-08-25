@@ -16,7 +16,7 @@ public class ServerLevelMixin {
                 value = "INVOKE",
                 target =
                     "Lnet/minecraft/world/level/entity/PersistentEntitySectionManager;tick()V"))
-    private void afterEntities(CallbackInfo ci) {
+    private void afterEntities(CallbackInfo _ci) {
         ExplosionLogHelper.afterEntities();
     }
 }

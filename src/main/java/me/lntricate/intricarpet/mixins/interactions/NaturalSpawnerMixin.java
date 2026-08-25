@@ -27,7 +27,7 @@ public class NaturalSpawnerMixin {
                 target =
                     "Lnet/minecraft/server/level/ServerLevel;getNearestPlayer(DDDDZ)Lnet/minecraft/world/entity/player/Player;"))
     private static Player getNearestPlayer(
-        ServerLevel self, double a, double b, double c, double d, boolean e) {
+        ServerLevel self, double a, double b, double c, double d, boolean _e) {
         return self.getNearestPlayer(
             a,
             b,
@@ -49,13 +49,14 @@ public class NaturalSpawnerMixin {
     private static void shouldSpawnMobs(
         ServerLevel level,
         LevelChunk levelChunk,
-        SpawnState a,
-        boolean b,
-        boolean c,
-        boolean d,
+        SpawnState _a,
+        boolean _b,
+        boolean _c,
+        boolean _d,
         CallbackInfo ci) {
         if (!((IChunkMap) level.getChunkSource().chunkMap)
-            .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING))
+            .anyPlayerCloseWithInteraction(levelChunk.getPos(), Interaction.MOBSPAWNING)) {
             ci.cancel();
+        }
     }
 }
