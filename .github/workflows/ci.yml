@@ -26,7 +26,16 @@ env:
   # compiles with `cargo install` — hence the Rust toolchain and the tool-cache restore below.
   # Pinning it here rather than per job is what keeps the whole matrix on one toolchain; the
   # `jals` job below turns it into the commit the tool cache is actually keyed on.
-  JALS_VERSION: main
+  #
+  # TODO(jals#305): a pull-request branch rather than `main`, and deliberately — the `test` job
+  # below needs two fixes that live in the tool rather than in the harness it runs. `jals-frontend`
+  # generates the test harness in the default package, and a classpath carrying a class named `com`
+  # (33 of the 43 releases map one) turned `com.example.mctest.…` into `cannot find symbol:
+  # variable example`; `jals-classpath` dropped `Multi-Release` when it merged the 1.17 bundler, so
+  # log4j loaded its Java 8 body and died before a frame of the game. On `main` this job cannot
+  # work. When #305 merges this goes back to `main` and rejoins `release.yml`, which is untouched
+  # here because a release publishes jars and runs no tests.
+  JALS_VERSION: feat/multi-release-client-harness
 
 jobs:
   jals:
@@ -179,6 +188,156 @@ jobs:
           name: intricarpet-mc${{ matrix.minecraft }}
           path: target/jals/remap/*.jar
           if-no-files-found: error
+
+  test:
+    # The fifteen releases once more, and the only job here that *runs* Minecraft rather than
+    # compiling against it. `jals test` resolves the `mc-client-test` harness the manifest names
+    # under `[dev-dependencies]`, puts that release's ~60 client runtime libraries on the classpath,
+    # and each `#[test]` boots a real client headless, opens a world in it and asserts against the
+    # game and its integrated server.
+    #
+    # **What a green cell here does and does not say.** The test JVM has no Fabric loader, no Knot
+    # and no Mixin transformer, so none of this mod's mixins are applied. Nothing under
+    # `src/test/java` asserts about behaviour a mixin injects, and no cell here should be read as
+    # saying the mod *works* on a release. What they say is narrower and is not said anywhere else:
+    # every mixin this selection compiled names a target the release actually has
+    # (`MixinTargetsTest`, which needs no client at all — a missing target is a hard load failure
+    # that `jals build`, `check-remap.py` and `regenerate.py --check` all pass), the mod's own
+    # release-portable state classes hold against real objects of that release, and the release
+    # boots and loads a world at all.
+    #
+    # **What it costs, which is more than the same matrix costs jals' own example.** A dependency
+    # node's identity is a string, and this project reaches the SDK over Git while the harness
+    # reaches it as its own `path = "../minecraft"`; the two spellings never meet, so the diamond
+    # `examples/minecraft_mod` closes in one working tree is two nodes here, and no manifest
+    # spelling changes that. Every cell is therefore two game-jar fetches and two whole-game remaps
+    # before a client is ever started — which is why this job is the long pole of the workflow and
+    # why it carries a timeout of its own. It is also why `client-test` routes `minecraft/client`
+    # into this project's own node as well as the harness's: without it the two nodes disagree,
+    # the server jar wins the classpath and the boot dies in the resource reload on a texture only
+    # a client jar carries. `jals build` is untouched, because it never resolves a
+    # `[dev-dependencies]` entry.
+    needs: jals
+    name: test (${{ matrix.minecraft }})
+    runs-on: ubuntu-latest
+    # Two fetches, two remaps and two client boots. The step's own `--timeout` bounds a hung boot
+    # with a readable account; this bounds everything around it.
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        # `java` here is a *third* number, and not the `java` column the `build` job carries: it is
+        # the JVM the release has to **boot** on, from the harness's own era table. `javac` is a
+        # separate axis and is one JDK 25 for every cell — it only has to read the game's class
+        # files and accept the `--release` `build.rhai` derives, and a current one does both for all
+        # fifteen.
+        #
+        # 1.17.1 is where this job and `build` disagree, and the disagreement is deliberate. `build`
+        # gives it JDK 17 because `--release 16` compiles fine there and it keeps CI off an
+        # end-of-life Temurin. That reasoning does not carry over: a client is *run* here, and 1.17
+        # asks for 16 and means it. Temurin 16 is end-of-life but is still published — Adoptium
+        # serves `jdk-16.0.2+7` for linux/x64, checked rather than assumed. If it is ever withdrawn
+        # this one cell is where it shows, and `distribution: zulu` is the fallback.
+        include:
+          - minecraft: "1.17.1"
+            java: "16"
+          - minecraft: "1.18.2"
+            java: "17"
+          - minecraft: "1.19.2"
+            java: "17"
+          - minecraft: "1.19.3"
+            java: "17"
+          - minecraft: "1.19.4"
+            java: "17"
+          - minecraft: "1.20.1"
+            java: "17"
+          - minecraft: "1.20.2"
+            java: "17"
+          - minecraft: "1.21.1"
+            java: "21"
+          - minecraft: "1.21.4"
+            java: "21"
+          - minecraft: "1.21.5"
+            java: "21"
+          - minecraft: "1.21.8"
+            java: "21"
+          - minecraft: "1.21.10"
+            java: "21"
+          - minecraft: "1.21.11"
+            java: "21"
+          - minecraft: "26.1.2"
+            java: "25"
+          - minecraft: "26.2"
+            java: "25"
+    steps:
+      - uses: actions/checkout@v7
+
+      # Both JDKs, and neither through `$JAVA_HOME`: the second `setup-java` would otherwise decide
+      # for both tools. Each call also exports a `JAVA_HOME_<major>_X64`, which is what the step
+      # below reads to hand `javac` and `java` their own installs.
+      - name: Set up the JDK that compiles
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Set up the JDK ${{ matrix.minecraft }} boots on
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+
+      # `xvfb` supplies the display GLFW opens a window on and `libgl1-mesa-dri` supplies llvmpipe,
+      # the software rasterizer `LIBGL_ALWAYS_SOFTWARE` selects below. Neither is on the runner
+      # image.
+      - name: Install a headless OpenGL stack
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri libglx-mesa0
+
+      # `-j 1`, because each `#[test]` boots its own client and two at once want two GL contexts and
+      # twice the memory. `--timeout` is the outer bound and sits *above* the harness's own: `jals
+      # test`'s deadline kills the JVM outright, while `GameClient`'s deadlines print where the boot
+      # was waiting and append the game thread's stack, and a shorter kill throws away the only
+      # account of a hung boot. Never `--no-capture`: the harness halts the JVM on its way out with
+      # status 0, so the captured sentinel line is the only verdict there is.
+      - name: Test
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          set -euo pipefail
+          compile_home="JAVA_HOME_25_X64"
+          runtime_home="JAVA_HOME_${{ matrix.java }}_X64"
+          export JAVAC="${!compile_home}/bin/javac"
+          export JAVA="${!runtime_home}/bin/java"
+          "$JAVAC" -version
+          "$JAVA" -version
+          xvfb-run -a jals test --features "${{ matrix.minecraft }},client-test" -j 1 --timeout 1800
+
+      # A client that failed to boot says nothing through an exit status. Its log and any crash
+      # report are the only account of what happened, and both are under the run directory the
+      # harness makes for the JVM that owns them.
+      - name: Keep what a failed client run left behind
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-run-mc${{ matrix.minecraft }}
+          path: |
+            target/jals/build/mc-client/**/logs/**
+            target/jals/build/mc-client/**/crash-reports/**
+            target/jals/build/test-run/**
+          if-no-files-found: ignore
 
   lint:
     # The gate that holds for every release, and it holds for the whole rule set: there is no
