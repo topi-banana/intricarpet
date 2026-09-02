@@ -76,6 +76,108 @@ are the version features in `jals.toml`:
 `1.17.1` `1.18.2` `1.19.2` `1.19.3` `1.19.4` `1.20.1` `1.20.2` `1.21.1` `1.21.4` `1.21.5` `1.21.8`
 `1.21.10` `1.21.11` `26.1.2` `26.2`
 
+### Testing
+
+`jals test` compiles `src/test/java` **in addition to** the tree `jals build` compiles, and runs each
+`#[test]` method in a JVM of its own. `jals build` is untouched by any of it: a `#[test]` method is
+removed by the build lowering, `src/test/java` is not a build source root, and the harness the tests
+drive is a `[dev-dependencies]` entry, which nothing that produces output ever resolves.
+
+```sh
+# Every release, no client: the two gates below that need only the game jar and Carpet.
+jals test --features 26.2
+
+# The same plus the client end-to-end tests. One at a time — each boots its own Minecraft.
+jals test --features 26.2,client-test -j 1 --timeout 1800
+```
+
+Three things are checked, and they are worth separating by what they can see:
+
+- **`MixinConfigTest`** — `intricarpet.mixins.json` names exactly the mixin classes the selection
+  compiled. Nothing else checks this, and both ways of getting it wrong are silent until they are
+  not: `build.rhai` writes that list by hand while the source decides by `#[cfg]` which classes
+  exist, so naming a blanked class makes Mixin refuse the whole configuration at load — the mod does
+  not start, on a jar that `jals build`, `check-remap.py` and `regenerate.py --check` all passed —
+  and forgetting to name one applies nothing and says nothing.
+- **`InteractionTest`** — `Interaction`, the one part of this mod that names no Minecraft and no
+  Carpet type, and the state `/interaction` reads and every interaction mixin writes through.
+- **`ClientTest`** — boots a real client of the selected release, opens a world in it, and asserts
+  this mod's release-portable state classes against real objects of that release. `#[cfg(feature =
+  "client-test")]` on every declaration, so any other selection compiles and lints as if the file
+  were not there.
+
+**Run `jals clean` when you change `--features` locally.** A classes directory is not scoped to a
+selection and jals does not clear it when the selection changes, so a class file the *previous*
+selection wrote survives into the next run — `#[cfg]` blanks a declaration, it does not delete a
+class file somebody already compiled. Reproduced in two commands:
+
+```sh
+jals test --features 1.21.5     # compiles interactions.ChunkMapAccessor
+jals test --features 1.17.1     # blanks it — and the class file from the run above is still there
+```
+
+The second run fails `MixinConfigTest`, and the failure is *correct*: the accessor really was on that
+JVM's classpath, for every test in the run and not only this one. What the test cannot tell you is
+which of the two causes it is — a stale directory, or a `build.rhai` that genuinely forgot a mixin —
+so it names both, and `jals clean` is what settles it.
+
+It reaches `jals build` too, where it is worth more than a red test: a local `jals build --features
+1.17.1` run after a 26.2 one packages that stale `ChunkMapAccessor.class` into the jar. The rendered
+config does not name it so Mixin never applies it, but a jar built that way carries a class from a
+release it was not built for. **No CI job can hit any of this** — every cell of `ci.yml` and
+`release.yml` alike is a fresh checkout building a single selection — so published jars are not
+affected. It is a local-workflow hazard, and the underlying fix belongs in jals rather than here.
+
+**None of this mod's mixins are applied by a test.** The test JVM has the game and this mod's classes
+on one classpath and nothing else — no Fabric loader, no Knot, no Mixin transformer — so every
+`@Inject` and `@Redirect` under `mixins/` is inert, and no test asserts about behaviour a mixin
+injects. What the matrix says is narrower than "the mod works on this release", and saying it plainly
+is what keeps a green cell from being read as more than it is.
+
+The client comes from jals' own `examples/minecraft_client_test`, a harness that covers all 43
+releases the SDK carries — this mod's fifteen among them — so nothing under `src/test/java` names a
+release and adding a sixteenth needs no test change. Two JDKs, chosen independently, because the
+compiler only has to *read* the release's class files while the runtime has to be one the release can
+**boot** on:
+
+| releases           | compiles with (`$JAVAC`) | boots on (`$JAVA`) |
+| ------------------ | ------------------------ | ------------------ |
+| 1.17.1             | 16+ — one JDK 25 does all fifteen | 16        |
+| 1.18.2 – 1.20.2    |                          | 17                 |
+| 1.21.1 – 1.21.11   |                          | 21                 |
+| 26.1.2, 26.2       |                          | 25                 |
+
+```sh
+JAVAC=$JDK25/bin/javac JAVA=$JDK17/bin/java jals test --features 1.20.1,client-test -j 1
+```
+
+Three constraints come from the harness rather than from this mod: run with `-j 1`, because each test
+boots its own client and two at once want two GL contexts and twice the memory; never with
+`--no-capture`, because the harness halts the JVM on its way out with status `0` and the captured
+sentinel line is the only verdict there is; and Linux only, because GLFW wants the main thread on
+macOS and the main thread belongs to the test. CI supplies the display with `xvfb` and the rasterizer
+with Mesa's llvmpipe.
+
+**Two SDK nodes, which is what a Git dependency costs here.** A dependency node's identity is a
+string. This project reaches the Minecraft SDK over Git
+(`git\0<repo>\0<commit>\0examples/minecraft`) while the harness reaches that same directory as its
+own `path = "../minecraft"` (`path-in-git\0…`), and the two spellings never meet — so the diamond
+that closes into one node for a project sitting *beside* the harness is two nodes here, and no
+manifest spelling changes that.
+
+That is why `client-test` routes `minecraft/client` into this project's own SDK node even though the
+harness's edge already routes one into its. It reads as a redundancy and is not: without it, the
+harness's node resolves the merged jar while this project's resolves the SDK's default `server`, and
+the server jar wins the classpath — which is not a cost but a crash, `FileNotFoundException:
+minecraft:textures/colormap/grass.png` out of the resource reload, because a server jar carries no
+client assets. With the route, both nodes resolve the merged jar and whichever entry comes first
+carries the whole game. The remaining cost is real and is the reason this is the long pole of CI:
+every `jals test` is two game-jar fetches and two whole-game remaps before a client is started. They
+are the same release remapped with the same official mappings, and they share a classpath the way
+the SDK's jars already share one with the pinned client libraries — first entry wins, and the
+duplicated classes are the same class. `jals build` is untouched: it never resolves a
+`[dev-dependencies]` entry.
+
 ### How one source tree targets fifteen releases
 
 It used to be the [ReplayMod preprocessor](https://github.com/Fallen-Breath/preprocessor): the
