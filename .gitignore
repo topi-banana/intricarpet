@@ -1,9 +1,6 @@
-# gradle
+# jals
 
-.gradle/
-build/
-out/
-classes/
+target/
 
 # eclipse
 
@@ -31,3 +28,11 @@ bin/
 # fabric
 
 run/
+
+# the client end-to-end tests
+
+# LWJGL extracts the natives it needs out of the `-natives-linux` classifier jars on the classpath
+# — there is no `-Djava.library.path` and no unpacked directory a launcher would have made — and it
+# unpacks them beside the manifest, because the working directory of a `jals test` JVM is the
+# project root. One directory per LWJGL version, written by every client boot.
+.lwjgl/

@@ -1,0 +1,261 @@
+# IntriCarpet is built by `jals` alone. There is no Gradle, no Loom and no ReplayMod
+# preprocessor: the version-compatible build that used to be a preprocessor pass over
+# `//#if MC >= 11800` comments is now the jals dialect's own `#[cfg(feature = "…")]`, resolved
+# against the `[features]` table below.
+#
+#     jals build --features 1.21.11
+#     jals lint  --features 1.21.11
+#
+# Exactly one version feature must be selected; `build.rhai` rejects zero and rejects two, because
+# feature resolution is additive (Cargo's model) and cannot express exclusivity on its own.
+
+[package]
+name = "intricarpet"
+version = "2.0.7"
+# `attributes` turns on the jals dialect's `#[cfg(...)]`. It is what makes every `#[cfg]` in
+# `src/main/java` a *conditional-compilation* directive rather than a syntax error: the compile
+# frontend strips every attribute before `javac` sees the source, and blanks — length-preservingly,
+# so line numbers in a stack trace still name the line the author wrote — every declaration,
+# statement or import whose predicate is false.
+features = ["attributes"]
+
+# Two kinds of name live here, and only the first kind is ever selected on a command line.
+#
+# A **version feature** (`1.21.11`) is one release of the mod. It does three things at once: it
+# routes the same name into the Minecraft SDK, activates that release's Carpet jar, and enables the
+# highest *threshold* feature the release satisfies.
+#
+# A **threshold feature** (`since-1.21.5`) is what the source actually tests. Each one enables its
+# predecessor, so naming the highest enables the whole chain below it and `#[cfg(feature =
+# "since-1.18")]` is true for every release from 1.18.2 up without any release listing eight names.
+# That is the same shape `jals-config` gives the Java release presets, and it is what replaces the
+# preprocessor's numeric comparisons: `MC >= 11800` is `feature = "since-1.18"`, and `MC < 11800`
+# is `not(feature = "since-1.18")`.
+#
+# A threshold exists only where the source branches on it. Adding one means adding a link to the
+# chain and pointing the affected releases at it — never editing the releases that come before.
+[features]
+# The client end-to-end tests under `src/test/java`, and the only feature here that is neither a
+# version nor a threshold. One name on a command line is the whole selection:
+#
+#     jals test --features 1.21.11,client-test -j 1
+#
+# It names no release and cannot: the harness carries all 43 the SDK does, and which one reaches it
+# is routed by whichever version feature the command line named — every row below carries a
+# `mc-client-test/<release>` beside its `minecraft/<release>`. What this name selects is this
+# project's own test sources, which are `#[cfg]`-gated on it whole, and the JVM argument
+# `build.rhai` writes for them. A selection that omits it compiles and lints as if `src/test/java`
+# were not there, which is what keeps the fifteen build and lint cells unchanged.
+#
+# `minecraft/client` is routed from here as well as from the harness's own edge, and that is not
+# the redundancy it looks like. A dependency node's identity is a string: this project reaches the
+# SDK over Git and the harness reaches the same directory as its own `path = "../minecraft"`, and
+# the two spellings never meet — so where `examples/minecraft_mod` has one SDK node with both routes
+# unioned into it, this project has two. Without this line the harness's node is the merged jar and
+# *this* project's node is the SDK's default `server` — and the server jar wins the classpath, which
+# is not a cost but a crash: `FileNotFoundException: minecraft:textures/colormap/grass.png`, out of
+# the resource reload, because a server jar carries no client assets. Measured on 26.2, not
+# reasoned about. With the route here both nodes resolve the merged jar, so whichever entry comes
+# first carries the whole game.
+client-test = ["minecraft/client"]
+
+"since-1.18" = []
+"since-1.19" = ["since-1.18"]
+"since-1.20" = ["since-1.19"]
+"since-1.20.2" = ["since-1.20"]
+"since-1.21" = ["since-1.20.2"]
+"since-1.21.2" = ["since-1.21"]
+"since-1.21.5" = ["since-1.21.2"]
+"since-1.21.6" = ["since-1.21.5"]
+"since-26" = ["since-1.21.6"]
+
+"1.17.1" = ["minecraft/1.17.1", "mc-client-test/1.17.1", "dep:carpet-1.17.1"]
+"1.18.2" = ["since-1.18", "minecraft/1.18.2", "mc-client-test/1.18.2", "dep:carpet-1.18.2"]
+"1.19.2" = ["since-1.19", "minecraft/1.19.2", "mc-client-test/1.19.2", "dep:carpet-1.19.2"]
+"1.19.3" = ["since-1.19", "minecraft/1.19.3", "mc-client-test/1.19.3", "dep:carpet-1.19.3"]
+"1.19.4" = ["since-1.19", "minecraft/1.19.4", "mc-client-test/1.19.4", "dep:carpet-1.19.4"]
+"1.20.1" = ["since-1.20", "minecraft/1.20.1", "mc-client-test/1.20.1", "dep:carpet-1.20.1"]
+"1.20.2" = ["since-1.20.2", "minecraft/1.20.2", "mc-client-test/1.20.2", "dep:carpet-1.20.2"]
+"1.21.1" = ["since-1.21", "minecraft/1.21.1", "mc-client-test/1.21.1", "dep:carpet-1.21.1"]
+"1.21.4" = ["since-1.21.2", "minecraft/1.21.4", "mc-client-test/1.21.4", "dep:carpet-1.21.4"]
+"1.21.5" = ["since-1.21.5", "minecraft/1.21.5", "mc-client-test/1.21.5", "dep:carpet-1.21.5"]
+"1.21.8" = ["since-1.21.6", "minecraft/1.21.8", "mc-client-test/1.21.8", "dep:carpet-1.21.8"]
+"1.21.10" = ["since-1.21.6", "minecraft/1.21.10", "mc-client-test/1.21.10", "dep:carpet-1.21.10"]
+"1.21.11" = ["since-1.21.6", "minecraft/1.21.11", "mc-client-test/1.21.11", "dep:carpet-1.21.11"]
+"26.1.2" = ["since-26", "minecraft/26.1.2", "mc-client-test/26.1.2", "dep:carpet-26.1.2"]
+"26.2" = ["since-26", "minecraft/26.2", "mc-client-test/26.2", "dep:carpet-26.2"]
+
+# The Minecraft SDK is jals' own `examples/minecraft`: a source project whose build script fetches
+# the release, unwraps the 1.18+ bundler, remaps it with the official mappings, puts the game jar —
+# and SpongePowered Mixin and MixinExtras — on this project's compile classpath, and publishes the
+# matching sources as navigation trees an editor can open. Every version feature above forwards its
+# own name into it, which is the whole of what selects a release.
+#
+# Carpet is one optional jar per release, activated by that release's feature (`dep:carpet-1.21.11`)
+# and inert otherwise, so a selection pulls exactly one Carpet down. On the thirteen obfuscated
+# releases it is deobfuscated on the way in — see `[[mappings.intermediary]]` below.
+[dependencies]
+minecraft = { git = "https://github.com/topi-banana/jals", branch = "main", dir = "examples/minecraft" }
+fabric-loader = { jar = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.18.4/fabric-loader-0.18.4.jar" }
+"carpet-1.17.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.17.1-1.4.57+v220119/fabric-carpet-1.17.1-1.4.57+v220119.jar", optional = true, remap = "intermediary" }
+"carpet-1.18.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.18.2-1.4.69+v220331/fabric-carpet-1.18.2-1.4.69+v220331.jar", optional = true, remap = "intermediary" }
+"carpet-1.19.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.2-1.4.84+v221018/fabric-carpet-1.19.2-1.4.84+v221018.jar", optional = true, remap = "intermediary" }
+"carpet-1.19.3" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.3-1.4.96+v230201/fabric-carpet-1.19.3-1.4.96+v230201.jar", optional = true, remap = "intermediary" }
+"carpet-1.19.4" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.4-1.4.100+v230314/fabric-carpet-1.19.4-1.4.100+v230314.jar", optional = true, remap = "intermediary" }
+"carpet-1.20.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.20-1.4.112+v230608/fabric-carpet-1.20-1.4.112+v230608.jar", optional = true, remap = "intermediary" }
+"carpet-1.20.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.20.2-1.4.119+v230928/fabric-carpet-1.20.2-1.4.119+v230928.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21-1.4.147+v240613/fabric-carpet-1.21-1.4.147+v240613.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.4" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.4-1.4.161+v241203/fabric-carpet-1.21.4-1.4.161+v241203.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.5" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.5-1.4.169+v250325/fabric-carpet-1.21.5-1.4.169+v250325.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.8" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.7-1.4.177+v250630/fabric-carpet-1.21.7-1.4.177+v250630.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.10" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.21.10-1.4.188+v251016/fabric-carpet-1.21.10-1.4.188+v251016.jar", optional = true, remap = "intermediary" }
+"carpet-1.21.11" = { jar = "https://jitpack.io/com/github/gnembon/fabric-carpet/1.4.194/fabric-carpet-1.4.194.jar", optional = true, remap = "intermediary" }
+"carpet-26.1.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.1+v260401/fabric-carpet-26.1+v260401.jar", optional = true }
+"carpet-26.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.2+v260616/fabric-carpet-26.2+v260616.jar", optional = true }
+
+# `jals test` compiles this tree *in addition to* `[build] source-dirs` and writes the result
+# somewhere else, so `jals build` still packages exactly the classes it packaged before: a `#[test]`
+# method is removed by the build lowering and kept by the test one, and nothing under here reaches
+# the mod jar at all.
+[test]
+source-dirs = ["src/test/java"]
+classes-dir = "target/test-classes"
+
+# The client harness, and the reason it is *here* rather than in `[dependencies]`: a source
+# dependency's `.java` is compiled into whoever consumes it, so a harness declared above would be
+# compiled by `jals build` and packaged into the mod jar. `[dev-dependencies]` is resolved by
+# `jals test` and by the analysis hosts, and by nothing that produces output.
+#
+# Nothing in it is mod-specific — `GameClient` names no type in `me.lntricate.intricarpet` — and it
+# is one line in this manifest plus one route per release above.
+#
+# **What it costs here, which is more than it costs the example that ships with it.** A node's
+# identity is a string, and the two spellings do not meet: this project reaches the SDK as
+# `git\0<repo>\0<commit>\0examples/minecraft`, while the harness reaches it as its own
+# `path = "../minecraft"`, which inside a Git checkout is `path-in-git\0<repo>\0<commit>\0
+# examples/minecraft`. `examples/minecraft_mod` sits beside the harness in one working tree and
+# gets one node; a consumer that depends on jals over Git gets two, and no manifest spelling
+# changes that. So a `jals test` here is **two** game-jar fetches and two whole-game remaps rather
+# than one. Which jar each node answers with is what `[features] client-test` above is about, and
+# why it routes `minecraft/client`: with it, both nodes resolve the merged jar, which is the only
+# arrangement that boots. Both are the same release remapped with the same official mappings, and
+# they share the classpath the way the SDK's own jars already share it with the pinned client
+# libraries — first entry wins, and the duplicated classes are the same class.
+#
+# `jals build` is untouched by all of it: it never resolves a `[dev-dependencies]` entry.
+[dev-dependencies]
+# TODO(jals#305): `branch` points at the pull request that adds the harness. Once it merges this
+# goes back to `branch = "main"`, the way `[dependencies] minecraft` above already is — and
+# `JALS_VERSION` in both workflows goes with it, because the harness needs two fixes that live in
+# the tool rather than in the example (`jals-frontend`'s shim imports and `jals-classpath`'s
+# `Multi-Release` merge).
+mc-client-test = { git = "https://github.com/topi-banana/jals", branch = "feat/multi-release-client-harness", dir = "examples/minecraft_client_test" }
+
+[build]
+script = { type = "rhai", file = "build.rhai" }
+source-dirs = ["src/main/java"]
+# Two roots. `src/main/resources` is what is authored — today only the mod icon. The second is
+# where `build.rhai` writes the two resources that used to be Gradle `processResources` filters:
+# `fabric.mod.json` (the mod id, name, version and the release's dependency ranges) and
+# `intricarpet.mixins.json` (the Mixin compatibility level, and whether `ChunkMapAccessor` exists in
+# this selection at all). Templating them in the build script rather than in the build *tool* is
+# what let the tool go.
+resource-dirs = ["src/main/resources", "target/jals/build/rhai/out/resources"]
+# Package the compiled classes and both resource roots into a jar, rewriting the classes into the
+# names Fabric loads a mod through on the way. `with` names one `[mappings]` key — the same one
+# `[dependencies] remap` reads, because one file describes both renamings and the two steps read it
+# in opposite directions. On 26.1 onward no alternative is active and the step packages the classes
+# as they are, which is right: those releases ship deobfuscated and the Mojang name *is* the
+# runtime name.
+remap = { with = "intermediary" }
+
+# One mapping set per release that ships obfuscated, and each one does two jobs.
+#
+# **Deobfuscating Carpet.** The Carpet release jar is *intermediary*-named while the game jar the
+# SDK puts beside it is Mojang-named, so the two cannot go on one classpath as published: `javac`
+# stops at the first Carpet signature that mentions a Minecraft type. `[dependencies] remap`
+# rewrites the jar on the way in.
+#
+# **Reobfuscating this mod.** Fabric loads a mod through intermediary names, so the jar `[build]
+# remap` writes has to carry them, and the compiled classes carry Mojang's.
+#
+# Those are the same table read in opposite directions, which is why the format is tiny v2 rather
+# than the ProGuard-style text Mojang publishes: a tiny v2 file names its namespaces, so `from` and
+# `to` say which renaming is meant instead of leaving it to whichever direction the step happens to
+# hardcode. `[dependencies] remap` reads `intermediary` → `mojang`, `[build] remap` the reverse.
+#
+# Each file is generated by `mappings/regenerate.py`, not hand-written: Fabric's intermediary
+# mappings for the release composed with the official mappings Mojang publishes for it. Neither
+# half is the whole game — see the script's own docstring for what is kept and why — and neither
+# omission is silent. A missing Carpet type stops `javac` on the `class_NNNN` it could not resolve;
+# a missing name of this mod's own is what `mappings/check-remap.py` fails CI on.
+#
+# At most one alternative may ever be active, which jals enforces statically: two alternatives whose
+# `required-features` are comparable by inclusion are rejected, because some selection would
+# activate both. Each row here names exactly one version, so the thirteen sets are pairwise
+# incomparable — and 26.1 onward names none, which is how those two releases opt out.
+
+[[mappings.intermediary]]
+required-features = ["1.17.1"]
+file = "mappings/intermediary-1.17.1.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.18.2"]
+file = "mappings/intermediary-1.18.2.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.19.2"]
+file = "mappings/intermediary-1.19.2.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.19.3"]
+file = "mappings/intermediary-1.19.3.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.19.4"]
+file = "mappings/intermediary-1.19.4.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.20.1"]
+file = "mappings/intermediary-1.20.1.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.20.2"]
+file = "mappings/intermediary-1.20.2.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.21.1"]
+file = "mappings/intermediary-1.21.1.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.21.4"]
+file = "mappings/intermediary-1.21.4.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.21.5"]
+file = "mappings/intermediary-1.21.5.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.21.8"]
+file = "mappings/intermediary-1.21.8.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.21.10"]
+file = "mappings/intermediary-1.21.10.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }
+
+[[mappings.intermediary]]
+required-features = ["1.21.11"]
+file = "mappings/intermediary-1.21.11.tiny"
+format = { type = "tiny-v2", from = "intermediary", to = "mojang" }

@@ -1,0 +1,453 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "src/**"
+      - "templates/**"
+      - "mappings/**"
+      - "jals.toml"
+      - "build.rhai"
+      - ".github/workflows/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The `jals` this repository builds with. The `Setup jals` action takes `latest` (the newest
+  # published release) or any git ref; until jals cuts a release this is a ref, which the action
+  # compiles with `cargo install` — hence the Rust toolchain and the tool-cache restore below.
+  # Pinning it here rather than per job is what keeps the whole matrix on one toolchain; the
+  # `jals` job below turns it into the commit the tool cache is actually keyed on.
+  #
+  # TODO(jals#305): a pull-request branch rather than `main`, and deliberately — the `test` job
+  # below needs two fixes that live in the tool rather than in the harness it runs. `jals-frontend`
+  # generates the test harness in the default package, and a classpath carrying a class named `com`
+  # (33 of the 43 releases map one) turned `com.example.mctest.…` into `cannot find symbol:
+  # variable example`; `jals-classpath` dropped `Multi-Release` when it merged the 1.17 bundler, so
+  # log4j loaded its Java 8 body and died before a frame of the game. On `main` this job cannot
+  # work. When #305 merges this goes back to `main` and rejoins `release.yml`, which is untouched
+  # here because a release publishes jars and runs no tests.
+  JALS_VERSION: feat/multi-release-client-harness
+
+jobs:
+  jals:
+    # `JALS_VERSION` may name a moving ref, and the tool cache every job below restores is keyed on
+    # it. Keying on the *name* of a branch is keying on a constant: the entry written the first
+    # time `main` was installed is served for every run after it, so CI keeps running whatever jals
+    # was current on the day the cache was warmed. That is not hypothetical — it is why `fmt`
+    # failed against a tree this file's own `JALS_VERSION` had just formatted. Resolve the ref to
+    # the commit it points at and key on that, so moving the ref writes a new entry.
+    #
+    # Resolved once for the whole run, not per cell: a push to jals mid-run would otherwise hand
+    # different cells different binaries, and a matrix that disagrees with itself about its own
+    # toolchain is worse than a stale one.
+    name: resolve jals
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.resolve.outputs.id }}
+    steps:
+      - name: Resolve JALS_VERSION to something immutable
+        id: resolve
+        run: |
+          set -euo pipefail
+          if [ "${JALS_VERSION}" = latest ]; then
+            # `latest` is a published release, so the tag name is the immutable half; re-cutting a
+            # release moves the tag and therefore the key.
+            id=$(curl -fsSL -H "Authorization: Bearer ${{ github.token }}" \
+              https://api.github.com/repos/topi-banana/jals/releases/latest | jq -r .tag_name)
+          else
+            # A branch or a tag resolves to its commit. `git ls-remote` prints nothing for a raw
+            # commit sha, which is already immutable and needs no resolving.
+            # `head -n1` because a pattern matches every ref ending in it, and a branch
+            # and a tag of the same name would otherwise put two shas in the key.
+            id=$(git ls-remote https://github.com/topi-banana/jals "${JALS_VERSION}" \
+              | head -n1 | cut -f1) || true
+            [ -n "${id}" ] || id="${JALS_VERSION}"
+          fi
+          [ -n "${id}" ] && [ "${id}" != null ] || {
+            echo "could not resolve JALS_VERSION=${JALS_VERSION} against topi-banana/jals" >&2
+            exit 1
+          }
+          echo "${JALS_VERSION} -> ${id}"
+          echo "id=${id}" >>"$GITHUB_OUTPUT"
+
+  build:
+    # One cell per supported Minecraft release, which is exactly the `[features]` table in
+    # `jals.toml`. The whole point of the migration is that these fifteen builds are one source
+    # tree and one manifest: the cell differs only in `--features`.
+    needs: jals
+    name: ${{ matrix.minecraft }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # `java` is the JDK the cell installs; it is *not* the `--release` `build.rhai` passes.
+        # `javac` accepts any `--release` up to its own version, so a JDK covers every release at or
+        # below it and these fifteen cells need three JDKs rather than four: 1.17.1 asks for
+        # `--release 16` and gets it from JDK 17, which keeps CI off an end-of-life Temurin. Both
+        # numbers still have to move together — a release whose `java` is below its `--release`
+        # fails with `release version N not supported`, and one whose game jar is newer than its
+        # JDK fails reading the jar.
+        include:
+          - minecraft: "1.17.1"
+            java: "17"
+          - minecraft: "1.18.2"
+            java: "17"
+          - minecraft: "1.19.2"
+            java: "17"
+          - minecraft: "1.19.3"
+            java: "17"
+          - minecraft: "1.19.4"
+            java: "17"
+          - minecraft: "1.20.1"
+            java: "17"
+          - minecraft: "1.20.2"
+            java: "17"
+          - minecraft: "1.21.1"
+            java: "21"
+          - minecraft: "1.21.4"
+            java: "21"
+          - minecraft: "1.21.5"
+            java: "21"
+          - minecraft: "1.21.8"
+            java: "21"
+          - minecraft: "1.21.10"
+            java: "21"
+          - minecraft: "1.21.11"
+            java: "21"
+          - minecraft: "26.1.2"
+            java: "25"
+          - minecraft: "26.2"
+            java: "25"
+    steps:
+      - uses: actions/checkout@v7
+
+      # `jals build` shells out to `javac`, and this is what puts one where jals looks: the action
+      # exports `$JAVA_HOME`, and jals' default `[toolchain]` resolution is `$JAVAC`, then
+      # `$JAVA_HOME/bin`, then `PATH` — so with no `$JAVAC` set, this step decides. The version is
+      # the cell's own, so each release is compiled by a JDK of its own era rather than by whichever
+      # one the whole matrix happened to share.
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      # Only the source fallback needs this; a released `jals` is a download. It is unconditional
+      # because `JALS_VERSION` is what decides, and a step whose `if` restates that decision is a
+      # second place to keep it right.
+      - uses: dtolnay/rust-toolchain@stable
+
+      # The action installs into the runner tool cache and reuses whatever is already there, so
+      # restoring that directory turns a five-minute `cargo install` into a cache hit for every
+      # cell after the first.
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+
+      # Fetches the game jar, unwraps the bundler, remaps it with the official mappings, fetches
+      # Carpet and the loader, deobfuscates Carpet on the obfuscated releases (`[dependencies]
+      # remap`, against the generated `mappings/intermediary-*.tiny`), renders the two resource
+      # templates, compiles, packages, and rewrites the packaged classes into intermediary names
+      # with the same mapping set read the other way round.
+      #
+      # Every cell has to reach a jar. This step carried `continue-on-error` on the thirteen
+      # obfuscated releases while Carpet's intermediary-named jar and the Mojang-named game jar
+      # could not share a classpath; now that the `remap` above reconciles them, an error here is a
+      # real regression and fails the run.
+      - name: Build
+        env:
+          JALS_BUILD_ID: ${{ github.run_number }}
+        run: jals build --features "${{ matrix.minecraft }}"
+
+      # The step above cannot fail on an incomplete mapping set: a remapper leaves what it cannot
+      # rename, so a name the set misses produces a jar that builds, uploads and dies at the first
+      # reference. This is the assertion that the jar is actually loadable — see
+      # `mappings/check-remap.py` for what it reads and what it deliberately does not.
+      - name: Check the jar is intermediary-named
+        run: python3 mappings/check-remap.py "${{ matrix.minecraft }}" target/jals/remap/*.jar
+
+      - name: Upload the jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: intricarpet-mc${{ matrix.minecraft }}
+          path: target/jals/remap/*.jar
+          if-no-files-found: error
+
+  test:
+    # The fifteen releases once more, and the only job here that *runs* Minecraft rather than
+    # compiling against it. `jals test` resolves the `mc-client-test` harness the manifest names
+    # under `[dev-dependencies]`, puts that release's ~60 client runtime libraries on the classpath,
+    # and each `#[test]` boots a real client headless, opens a world in it and asserts against the
+    # game and its integrated server.
+    #
+    # **What a green cell here does and does not say.** The test JVM has no Fabric loader, no Knot
+    # and no Mixin transformer, so none of this mod's mixins are applied. Nothing under
+    # `src/test/java` asserts about behaviour a mixin injects, and no cell here should be read as
+    # saying the mod *works* on a release. What they say is narrower and is not said anywhere else:
+    # every mixin this selection compiled names a target the release actually has
+    # (`MixinTargetsTest`, which needs no client at all — a missing target is a hard load failure
+    # that `jals build`, `check-remap.py` and `regenerate.py --check` all pass), the mod's own
+    # release-portable state classes hold against real objects of that release, and the release
+    # boots and loads a world at all.
+    #
+    # **What it costs, which is more than the same matrix costs jals' own example.** A dependency
+    # node's identity is a string, and this project reaches the SDK over Git while the harness
+    # reaches it as its own `path = "../minecraft"`; the two spellings never meet, so the diamond
+    # `examples/minecraft_mod` closes in one working tree is two nodes here, and no manifest
+    # spelling changes that. Every cell is therefore two game-jar fetches and two whole-game remaps
+    # before a client is ever started — which is why this job is the long pole of the workflow and
+    # why it carries a timeout of its own. It is also why `client-test` routes `minecraft/client`
+    # into this project's own node as well as the harness's: without it the two nodes disagree,
+    # the server jar wins the classpath and the boot dies in the resource reload on a texture only
+    # a client jar carries. `jals build` is untouched, because it never resolves a
+    # `[dev-dependencies]` entry.
+    needs: jals
+    name: test (${{ matrix.minecraft }})
+    runs-on: ubuntu-latest
+    # Two fetches, two remaps and two client boots. The step's own `--timeout` bounds a hung boot
+    # with a readable account; this bounds everything around it.
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        # `java` here is a *third* number, and not the `java` column the `build` job carries: it is
+        # the JVM the release has to **boot** on, from the harness's own era table. `javac` is a
+        # separate axis and is one JDK 25 for every cell — it only has to read the game's class
+        # files and accept the `--release` `build.rhai` derives, and a current one does both for all
+        # fifteen.
+        #
+        # 1.17.1 is where this job and `build` disagree, and the disagreement is deliberate. `build`
+        # gives it JDK 17 because `--release 16` compiles fine there and it keeps CI off an
+        # end-of-life Temurin. That reasoning does not carry over: a client is *run* here, and 1.17
+        # asks for 16 and means it. Temurin 16 is end-of-life but is still published — Adoptium
+        # serves `jdk-16.0.2+7` for linux/x64, checked rather than assumed. If it is ever withdrawn
+        # this one cell is where it shows, and `distribution: zulu` is the fallback.
+        include:
+          - minecraft: "1.17.1"
+            java: "16"
+          - minecraft: "1.18.2"
+            java: "17"
+          - minecraft: "1.19.2"
+            java: "17"
+          - minecraft: "1.19.3"
+            java: "17"
+          - minecraft: "1.19.4"
+            java: "17"
+          - minecraft: "1.20.1"
+            java: "17"
+          - minecraft: "1.20.2"
+            java: "17"
+          - minecraft: "1.21.1"
+            java: "21"
+          - minecraft: "1.21.4"
+            java: "21"
+          - minecraft: "1.21.5"
+            java: "21"
+          - minecraft: "1.21.8"
+            java: "21"
+          - minecraft: "1.21.10"
+            java: "21"
+          - minecraft: "1.21.11"
+            java: "21"
+          - minecraft: "26.1.2"
+            java: "25"
+          - minecraft: "26.2"
+            java: "25"
+    steps:
+      - uses: actions/checkout@v7
+
+      # Both JDKs, and neither through `$JAVA_HOME`: the second `setup-java` would otherwise decide
+      # for both tools. Each call also exports a `JAVA_HOME_<major>_X64`, which is what the step
+      # below reads to hand `javac` and `java` their own installs.
+      - name: Set up the JDK that compiles
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Set up the JDK ${{ matrix.minecraft }} boots on
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+
+      # `xvfb` supplies the display GLFW opens a window on and `libgl1-mesa-dri` supplies llvmpipe,
+      # the software rasterizer `LIBGL_ALWAYS_SOFTWARE` selects below. Neither is on the runner
+      # image.
+      - name: Install a headless OpenGL stack
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri libglx-mesa0
+
+      # `-j 1`, because each `#[test]` boots its own client and two at once want two GL contexts and
+      # twice the memory. `--timeout` is the outer bound and sits *above* the harness's own: `jals
+      # test`'s deadline kills the JVM outright, while `GameClient`'s deadlines print where the boot
+      # was waiting and append the game thread's stack, and a shorter kill throws away the only
+      # account of a hung boot. Never `--no-capture`: the harness halts the JVM on its way out with
+      # status 0, so the captured sentinel line is the only verdict there is.
+      - name: Test
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          set -euo pipefail
+          compile_home="JAVA_HOME_25_X64"
+          runtime_home="JAVA_HOME_${{ matrix.java }}_X64"
+          export JAVAC="${!compile_home}/bin/javac"
+          export JAVA="${!runtime_home}/bin/java"
+          "$JAVAC" -version
+          "$JAVA" -version
+          xvfb-run -a jals test --features "${{ matrix.minecraft }},client-test" -j 1 --timeout 1800
+
+      # A client that failed to boot says nothing through an exit status. Its log and any crash
+      # report are the only account of what happened, and both are under the run directory the
+      # harness makes for the JVM that owns them.
+      - name: Keep what a failed client run left behind
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-run-mc${{ matrix.minecraft }}
+          path: |
+            target/jals/build/mc-client/**/logs/**
+            target/jals/build/mc-client/**/crash-reports/**
+            target/jals/build/test-run/**
+          if-no-files-found: ignore
+
+  lint:
+    # The gate that holds for every release, and it holds for the whole rule set: there is no
+    # `jalslint.toml`, so every rule runs at its built-in severity and none is turned down. `jals
+    # lint` exits non-zero on any finding that is not a hint, which means a `warn` rule fails this
+    # job exactly as an `error` one does — `unused-variables`, `naming-convention`, `missing-braces`
+    # and the rest are gates here, not advice. Per-site suppression is `@SuppressWarnings`, read
+    # from the source; that is the escape hatch, not a config file.
+    #
+    # Part of what it catches is the *conversion*, once per selection: a `#[cfg]` predicate that is
+    # malformed, an attribute on a construct that cannot host one, an attribute after a modifier or
+    # annotation. `jals-lint` reports those under the fixed `cfg` rule, deliberately outside the
+    # per-rule severity gate — a build-blocking error is not a configurable lint — so no config file
+    # could have switched that half off even when one existed.
+    #
+    # This is what replaced the preprocessor, checked once per release rather than once. It runs
+    # offline against whatever the verified cache holds, which is nothing here: resolving fifteen
+    # game jars to lint a tree that has already been built by the job above would double the
+    # matrix's cost for an answer `javac` gives better. `cannot-resolve` therefore has no classpath
+    # to be an authority over and reports what it cannot see; that is a real cost of linting
+    # offline, and it is accepted rather than configured away.
+    needs: jals
+    name: lint (${{ matrix.minecraft }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft:
+          - "1.17.1"
+          - "1.18.2"
+          - "1.19.2"
+          - "1.19.3"
+          - "1.19.4"
+          - "1.20.1"
+          - "1.20.2"
+          - "1.21.1"
+          - "1.21.4"
+          - "1.21.5"
+          - "1.21.8"
+          - "1.21.10"
+          - "1.21.11"
+          - "26.1.2"
+          - "26.2"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+      # Tracked files only: nothing under `target/` is authored, and neither is anything a build
+      # script publishes into a source root.
+      - name: Lint every selection
+        run: |
+          mapfile -t sources < <(git ls-files -- '*.java')
+          printf 'checking %s\n' "${sources[@]}"
+          jals lint --features "${{ matrix.minecraft }}" "${sources[@]}"
+
+  fmt:
+    # One job, not a matrix: `jals fmt` has no `--features`. Formatting is a CST operation over the
+    # text as written — every `#[cfg]` branch is live source in every selection, so there is one
+    # answer for the whole tree and fifteen copies of it would be fifteen identical runs.
+    #
+    # The tree is formatted by `jals fmt`'s own defaults, with no `jalsfmt.toml` to override them.
+    # That is what makes `JALS_VERSION` the whole specification of this check: it names the rule set
+    # as much as it names the binary.
+    needs: jals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore the installed jals
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.tool_cache }}/jals
+          key: jals-${{ needs.jals.outputs.id }}-${{ runner.os }}-${{ runner.arch }}
+      - name: Install jals
+        uses: topi-banana/jals@main
+        with:
+          version: ${{ env.JALS_VERSION }}
+      # No JDK and no game jar: the formatter never resolves a name. It does read `jals.toml`, for
+      # the one rule that would write dialect syntax (`[imports] granularity`) and must not unless
+      # `grouped-imports` is on.
+      #
+      # Tracked files only, for the same reason as `lint` above. `--check` writes nothing, prints
+      # the diff it would have written, and fails — on a file that would change, and equally on one
+      # the formatter's fail-safe returned unchanged, since either answers "no" to "is every file
+      # already formatted".
+      - name: Check formatting
+        run: |
+          mapfile -t sources < <(git ls-files -- '*.java')
+          jals fmt --check "${sources[@]}"
+
+  refmaps:
+    # One job, no matrix and no toolchain: a refmap follows from two things that are both tracked —
+    # the committed mapping set and the source tree — so re-deriving all thirteen is a read of files
+    # in the checkout and nothing else. No jals, no JDK, no network.
+    #
+    # What it catches is the one way a generated file goes wrong between regenerations: a source tree
+    # that has moved on from it. Add an injector, rename a selector, shadow a member with no line to
+    # copy, and the jar still builds and still passes `check-remap.py` — every reference in its
+    # bytecode really is intermediary-named — while Mixin fails to resolve the target at apply time.
+    # That failure has no earlier signal than this job.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the refmaps are what the source says
+        run: python3 mappings/regenerate.py --check
