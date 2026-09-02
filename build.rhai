@@ -161,3 +161,26 @@ mixin_json.replace("${compatibility_level}", "JAVA_" + java_release);
 mixin_json.replace("${mixins}", mixin_list);
 mixin_json.replace("${refmap}", refmap);
 output.write_text("resources/intricarpet.mixins.json", mixin_json);
+
+// --- the client end-to-end tests ---------------------------------------------------------------
+//
+// `client-test` selects the whole test arrangement: it gates everything under `src/test/java`,
+// which is what drives the `mc-client-test` dev-dependency. The harness itself needs no switch —
+// it is a `[dev-dependencies]` entry, resolved by `jals test` and by nothing that produces output,
+// and its build script puts the release's ~60 client runtime libraries on the classpath whenever it
+// runs. Which release is not decided here either: every version feature in `jals.toml` routes
+// itself to the harness exactly the way it routes itself to the SDK.
+//
+// There is no release guard to write. The catalog loop above already rejected a selection that
+// named no release, and the harness carries every release that names one — all fifteen of this
+// mod's are inside its own catalog of 43.
+//
+// What stays is the one thing a dependency cannot contribute: `build.add_jvm_arg` reaches the test
+// JVM only from the *root* project's script, so every consumer of the harness writes this line.
+if build.feature("client-test") {
+    // The client is given its own heap rather than whatever a quarter of the runner's RAM comes
+    // to, so the test behaves the same on a laptop and on a CI machine. Without it the boot dies
+    // inside a resource reload with an `OutOfMemoryError`, which reads as a harness bug and is not
+    // one.
+    build.add_jvm_arg("-Xmx2G");
+}

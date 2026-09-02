@@ -35,6 +35,30 @@ features = ["attributes"]
 # A threshold exists only where the source branches on it. Adding one means adding a link to the
 # chain and pointing the affected releases at it — never editing the releases that come before.
 [features]
+# The client end-to-end tests under `src/test/java`, and the only feature here that is neither a
+# version nor a threshold. One name on a command line is the whole selection:
+#
+#     jals test --features 1.21.11,client-test -j 1
+#
+# It names no release and cannot: the harness carries all 43 the SDK does, and which one reaches it
+# is routed by whichever version feature the command line named — every row below carries a
+# `mc-client-test/<release>` beside its `minecraft/<release>`. What this name selects is this
+# project's own test sources, which are `#[cfg]`-gated on it whole, and the JVM argument
+# `build.rhai` writes for them. A selection that omits it compiles and lints as if `src/test/java`
+# were not there, which is what keeps the fifteen build and lint cells unchanged.
+#
+# `minecraft/client` is routed from here as well as from the harness's own edge, and that is not
+# the redundancy it looks like. A dependency node's identity is a string: this project reaches the
+# SDK over Git and the harness reaches the same directory as its own `path = "../minecraft"`, and
+# the two spellings never meet — so where `examples/minecraft_mod` has one SDK node with both routes
+# unioned into it, this project has two. Without this line the harness's node is the merged jar and
+# *this* project's node is the SDK's default `server` — and the server jar wins the classpath, which
+# is not a cost but a crash: `FileNotFoundException: minecraft:textures/colormap/grass.png`, out of
+# the resource reload, because a server jar carries no client assets. Measured on 26.2, not
+# reasoned about. With the route here both nodes resolve the merged jar, so whichever entry comes
+# first carries the whole game.
+client-test = ["minecraft/client"]
+
 "since-1.18" = []
 "since-1.19" = ["since-1.18"]
 "since-1.20" = ["since-1.19"]
@@ -45,21 +69,21 @@ features = ["attributes"]
 "since-1.21.6" = ["since-1.21.5"]
 "since-26" = ["since-1.21.6"]
 
-"1.17.1" = ["minecraft/1.17.1", "dep:carpet-1.17.1"]
-"1.18.2" = ["since-1.18", "minecraft/1.18.2", "dep:carpet-1.18.2"]
-"1.19.2" = ["since-1.19", "minecraft/1.19.2", "dep:carpet-1.19.2"]
-"1.19.3" = ["since-1.19", "minecraft/1.19.3", "dep:carpet-1.19.3"]
-"1.19.4" = ["since-1.19", "minecraft/1.19.4", "dep:carpet-1.19.4"]
-"1.20.1" = ["since-1.20", "minecraft/1.20.1", "dep:carpet-1.20.1"]
-"1.20.2" = ["since-1.20.2", "minecraft/1.20.2", "dep:carpet-1.20.2"]
-"1.21.1" = ["since-1.21", "minecraft/1.21.1", "dep:carpet-1.21.1"]
-"1.21.4" = ["since-1.21.2", "minecraft/1.21.4", "dep:carpet-1.21.4"]
-"1.21.5" = ["since-1.21.5", "minecraft/1.21.5", "dep:carpet-1.21.5"]
-"1.21.8" = ["since-1.21.6", "minecraft/1.21.8", "dep:carpet-1.21.8"]
-"1.21.10" = ["since-1.21.6", "minecraft/1.21.10", "dep:carpet-1.21.10"]
-"1.21.11" = ["since-1.21.6", "minecraft/1.21.11", "dep:carpet-1.21.11"]
-"26.1.2" = ["since-26", "minecraft/26.1.2", "dep:carpet-26.1.2"]
-"26.2" = ["since-26", "minecraft/26.2", "dep:carpet-26.2"]
+"1.17.1" = ["minecraft/1.17.1", "mc-client-test/1.17.1", "dep:carpet-1.17.1"]
+"1.18.2" = ["since-1.18", "minecraft/1.18.2", "mc-client-test/1.18.2", "dep:carpet-1.18.2"]
+"1.19.2" = ["since-1.19", "minecraft/1.19.2", "mc-client-test/1.19.2", "dep:carpet-1.19.2"]
+"1.19.3" = ["since-1.19", "minecraft/1.19.3", "mc-client-test/1.19.3", "dep:carpet-1.19.3"]
+"1.19.4" = ["since-1.19", "minecraft/1.19.4", "mc-client-test/1.19.4", "dep:carpet-1.19.4"]
+"1.20.1" = ["since-1.20", "minecraft/1.20.1", "mc-client-test/1.20.1", "dep:carpet-1.20.1"]
+"1.20.2" = ["since-1.20.2", "minecraft/1.20.2", "mc-client-test/1.20.2", "dep:carpet-1.20.2"]
+"1.21.1" = ["since-1.21", "minecraft/1.21.1", "mc-client-test/1.21.1", "dep:carpet-1.21.1"]
+"1.21.4" = ["since-1.21.2", "minecraft/1.21.4", "mc-client-test/1.21.4", "dep:carpet-1.21.4"]
+"1.21.5" = ["since-1.21.5", "minecraft/1.21.5", "mc-client-test/1.21.5", "dep:carpet-1.21.5"]
+"1.21.8" = ["since-1.21.6", "minecraft/1.21.8", "mc-client-test/1.21.8", "dep:carpet-1.21.8"]
+"1.21.10" = ["since-1.21.6", "minecraft/1.21.10", "mc-client-test/1.21.10", "dep:carpet-1.21.10"]
+"1.21.11" = ["since-1.21.6", "minecraft/1.21.11", "mc-client-test/1.21.11", "dep:carpet-1.21.11"]
+"26.1.2" = ["since-26", "minecraft/26.1.2", "mc-client-test/26.1.2", "dep:carpet-26.1.2"]
+"26.2" = ["since-26", "minecraft/26.2", "mc-client-test/26.2", "dep:carpet-26.2"]
 
 # The Minecraft SDK is jals' own `examples/minecraft`: a source project whose build script fetches
 # the release, unwraps the 1.18+ bundler, remaps it with the official mappings, puts the game jar —
@@ -88,6 +112,44 @@ fabric-loader = { jar = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/0
 "carpet-1.21.11" = { jar = "https://jitpack.io/com/github/gnembon/fabric-carpet/1.4.194/fabric-carpet-1.4.194.jar", optional = true, remap = "intermediary" }
 "carpet-26.1.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.1+v260401/fabric-carpet-26.1+v260401.jar", optional = true }
 "carpet-26.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.2+v260616/fabric-carpet-26.2+v260616.jar", optional = true }
+
+# `jals test` compiles this tree *in addition to* `[build] source-dirs` and writes the result
+# somewhere else, so `jals build` still packages exactly the classes it packaged before: a `#[test]`
+# method is removed by the build lowering and kept by the test one, and nothing under here reaches
+# the mod jar at all.
+[test]
+source-dirs = ["src/test/java"]
+classes-dir = "target/test-classes"
+
+# The client harness, and the reason it is *here* rather than in `[dependencies]`: a source
+# dependency's `.java` is compiled into whoever consumes it, so a harness declared above would be
+# compiled by `jals build` and packaged into the mod jar. `[dev-dependencies]` is resolved by
+# `jals test` and by the analysis hosts, and by nothing that produces output.
+#
+# Nothing in it is mod-specific — `GameClient` names no type in `me.lntricate.intricarpet` — and it
+# is one line in this manifest plus one route per release above.
+#
+# **What it costs here, which is more than it costs the example that ships with it.** A node's
+# identity is a string, and the two spellings do not meet: this project reaches the SDK as
+# `git\0<repo>\0<commit>\0examples/minecraft`, while the harness reaches it as its own
+# `path = "../minecraft"`, which inside a Git checkout is `path-in-git\0<repo>\0<commit>\0
+# examples/minecraft`. `examples/minecraft_mod` sits beside the harness in one working tree and
+# gets one node; a consumer that depends on jals over Git gets two, and no manifest spelling
+# changes that. So a `jals test` here is **two** game-jar fetches and two whole-game remaps rather
+# than one. Which jar each node answers with is what `[features] client-test` above is about, and
+# why it routes `minecraft/client`: with it, both nodes resolve the merged jar, which is the only
+# arrangement that boots. Both are the same release remapped with the same official mappings, and
+# they share the classpath the way the SDK's own jars already share it with the pinned client
+# libraries — first entry wins, and the duplicated classes are the same class.
+#
+# `jals build` is untouched by all of it: it never resolves a `[dev-dependencies]` entry.
+[dev-dependencies]
+# TODO(jals#305): `branch` points at the pull request that adds the harness. Once it merges this
+# goes back to `branch = "main"`, the way `[dependencies] minecraft` above already is — and
+# `JALS_VERSION` in both workflows goes with it, because the harness needs two fixes that live in
+# the tool rather than in the example (`jals-frontend`'s shim imports and `jals-classpath`'s
+# `Multi-Release` merge).
+mc-client-test = { git = "https://github.com/topi-banana/jals", branch = "feat/multi-release-client-harness", dir = "examples/minecraft_client_test" }
 
 [build]
 script = { type = "rhai", file = "build.rhai" }
