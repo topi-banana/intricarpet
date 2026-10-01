@@ -14,8 +14,10 @@ import me.lntricate.intricarpet.helpers.ExplosionHelper;
 #[cfg(not(feature = "since-1.19"))] import net.minecraft.network.chat.BaseComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 public class ExplosionLogHelper {
+    @Nullable
     private static Component LOG;
 
     public static void onExplosion(Vec3 pos, long tick, boolean affectBlocks) {
@@ -41,7 +43,7 @@ public class ExplosionLogHelper {
         if (ExplosionHelper.isEmpty()) {
             return;
         }
-        Vec3 pos = ExplosionHelper.getPos();
+        @Nullable Vec3 pos = ExplosionHelper.getPos();
         LOG =
             Messenger.c(
                 "d " + ExplosionHelper.getCountInPos() + "x ",

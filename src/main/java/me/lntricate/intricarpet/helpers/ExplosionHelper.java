@@ -1,15 +1,20 @@
 package me.lntricate.intricarpet.helpers;
 
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 public class ExplosionHelper {
+
+    @Nullable
     private static Vec3 POS = null;
+
     private static int COUNT_IN_POS = 0;
     private static int COUNT_IN_TICK = 0;
     private static long TICK = 0;
     private static long TIME = 0;
     private static boolean AFFECT_BLOCKS;
 
+    @Nullable
     public static Vec3 getPos() {
         return POS;
     }

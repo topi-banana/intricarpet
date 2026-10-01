@@ -97,6 +97,12 @@ client-test = ["minecraft/client"]
 [dependencies]
 minecraft = { git = "https://github.com/topi-banana/jals", branch = "main", dir = "examples/minecraft" }
 fabric-loader = { jar = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.18.4/fabric-loader-0.18.4.jar" }
+
+# The source's `@Nullable` is jspecify's. Three of the fifteen releases — 26.2, 26.1.2 and 1.21.11
+# — carry the annotation through the game's own libraries; the other twelve do not, and `javac`
+# needs the type in every selection, so it is pinned here rather than left to whichever releases
+# happen to bundle it. Annotation-only and CLASS-retained: compile classpath, nothing at runtime.
+jspecify = { jar = "https://repo1.maven.org/maven2/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar" }
 "carpet-1.17.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.17.1-1.4.57+v220119/fabric-carpet-1.17.1-1.4.57+v220119.jar", optional = true, remap = "intermediary" }
 "carpet-1.18.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.18.2-1.4.69+v220331/fabric-carpet-1.18.2-1.4.69+v220331.jar", optional = true, remap = "intermediary" }
 "carpet-1.19.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.2-1.4.84+v221018/fabric-carpet-1.19.2-1.4.84+v221018.jar", optional = true, remap = "intermediary" }
