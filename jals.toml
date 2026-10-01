@@ -103,6 +103,7 @@ fabric-loader = { jar = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/0
 # needs the type in every selection, so it is pinned here rather than left to whichever releases
 # happen to bundle it. Annotation-only and CLASS-retained: compile classpath, nothing at runtime.
 jspecify = { jar = "https://repo1.maven.org/maven2/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar" }
+
 "carpet-1.17.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.17.1-1.4.57+v220119/fabric-carpet-1.17.1-1.4.57+v220119.jar", optional = true, remap = "intermediary" }
 "carpet-1.18.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.18.2-1.4.69+v220331/fabric-carpet-1.18.2-1.4.69+v220331.jar", optional = true, remap = "intermediary" }
 "carpet-1.19.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.19.2-1.4.84+v221018/fabric-carpet-1.19.2-1.4.84+v221018.jar", optional = true, remap = "intermediary" }
@@ -152,10 +153,10 @@ classes-dir = "target/test-classes"
 [dev-dependencies]
 # No `branch`: jals#305, the pull request that added the harness, has landed on the default
 # branch, which is the `main` both workflows' `JALS_VERSION` names.
-mc-client-test = { git = "https://github.com/topi-banana/jals", branch = "feat/multi-release-client-harness", dir = "examples/minecraft_client_test" }
+mc-client-test = { git = "https://github.com/topi-banana/jals", dir = "examples/minecraft_client_test" }
 
 [build]
-script = { type = "rhai", file = "build.rhai" }
+script = { type = "java", file = "build.java" }
 source-dirs = ["src/main/java"]
 # Two roots. `src/main/resources` is what is authored — today only the mod icon. The second is
 # where `build.rhai` writes the two resources that used to be Gradle `processResources` filters:

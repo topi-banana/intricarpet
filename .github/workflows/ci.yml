@@ -8,7 +8,7 @@ on:
       - "templates/**"
       - "mappings/**"
       - "jals.toml"
-      - "build.rhai"
+      - "build.java"
       - ".github/workflows/**"
   pull_request:
   workflow_dispatch:
