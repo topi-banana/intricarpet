@@ -1,13 +1,11 @@
 package me.lntricate.intricarpet;
 
-import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
 import com.llamalad7.mixinextras.MixinExtrasBootstrap;
+import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
 
-public class PreLaunch implements PreLaunchEntrypoint
-{
-  @Override
-  public void onPreLaunch()
-  {
-    MixinExtrasBootstrap.init();
-  }
+public class PreLaunch implements PreLaunchEntrypoint {
+    @Override
+    public void onPreLaunch() {
+        MixinExtrasBootstrap.init();
+    }
 }

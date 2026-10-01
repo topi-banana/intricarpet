@@ -1,0 +1,86 @@
+{
+  "data": {
+    "named:intermediary": {
+      "me/lntricate/intricarpet/mixins/OptimizedExplosionMixin": {
+        "Lnet/minecraft/world/entity/Entity;getZ()D": "Lnet/minecraft/class_1297;method_23321()D"
+      },
+      "me/lntricate/intricarpet/mixins/interactions/ChunkMapMixin": {
+        "skipPlayer": "method_18722"
+      },
+      "me/lntricate/intricarpet/mixins/interactions/EntityMixin": {
+        "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;F)V": "Lnet/minecraft/class_2248;method_9554(Lnet/minecraft/class_1937;Lnet/minecraft/class_2680;Lnet/minecraft/class_2338;Lnet/minecraft/class_1297;F)V",
+        "checkFallDamage": "method_5623",
+        "checkInsideBlocks": "method_5852",
+        "isIgnoringBlockTriggers": "method_5696",
+        "teleportToWithTicket": "method_20620"
+      },
+      "me/lntricate/intricarpet/mixins/interactions/EntitySelectorMixin": {
+        "pushableBy": "method_5911"
+      },
+      "me/lntricate/intricarpet/mixins/interactions/NaturalSpawnerMixin": {
+        "Lnet/minecraft/server/level/ServerLevel;getNearestPlayer(DDDDZ)Lnet/minecraft/world/entity/player/Player;": "Lnet/minecraft/class_3218;method_18459(DDDDZ)Lnet/minecraft/class_1657;",
+        "Lnet/minecraft/world/level/NaturalSpawner;spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V": "Lnet/minecraft/class_1948;method_24930(Lnet/minecraft/class_1311;Lnet/minecraft/class_3218;Lnet/minecraft/class_2791;Lnet/minecraft/class_2338;Lnet/minecraft/class_1948$class_5261;Lnet/minecraft/class_1948$class_5259;)V",
+        "spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)V": "method_27821(Lnet/minecraft/class_3218;Lnet/minecraft/class_2818;Lnet/minecraft/class_1948$class_5262;ZZZ)V"
+      },
+      "me/lntricate/intricarpet/mixins/interactions/ProjectileMixin": {
+        "canHitEntity": "method_26958"
+      },
+      "me/lntricate/intricarpet/mixins/interactions/ServerGamePacketListenerImplMixin": {
+        "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;I)V": "Lnet/minecraft/class_3225;method_14263(Lnet/minecraft/class_2338;Lnet/minecraft/class_2846$class_2847;Lnet/minecraft/class_2350;I)V",
+        "Lnet/minecraft/server/level/ServerPlayerGameMode;useItem(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;": "Lnet/minecraft/class_3225;method_14256(Lnet/minecraft/class_3222;Lnet/minecraft/class_1937;Lnet/minecraft/class_1799;Lnet/minecraft/class_1268;)Lnet/minecraft/class_1269;",
+        "Lnet/minecraft/server/level/ServerPlayerGameMode;useItemOn(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;": "Lnet/minecraft/class_3225;method_14262(Lnet/minecraft/class_3222;Lnet/minecraft/class_1937;Lnet/minecraft/class_1799;Lnet/minecraft/class_1268;Lnet/minecraft/class_3965;)Lnet/minecraft/class_1269;",
+        "handlePlayerAction": "method_12066",
+        "handleUseItem": "method_12065",
+        "handleUseItemOn": "method_12046"
+      },
+      "me/lntricate/intricarpet/mixins/interactions/ServerLevelMixin": {
+        "tickChunk(Lnet/minecraft/world/level/chunk/LevelChunk;I)V": "method_18203(Lnet/minecraft/class_2818;I)V"
+      },
+      "me/lntricate/intricarpet/mixins/logger/ServerLevelMixin": {
+        "Lnet/minecraft/world/level/entity/PersistentEntitySectionManager;tick()V": "Lnet/minecraft/class_5579;method_31809()V",
+        "tick": "method_18765"
+      }
+    }
+  },
+  "mappings": {
+    "me/lntricate/intricarpet/mixins/OptimizedExplosionMixin": {
+      "Lnet/minecraft/world/entity/Entity;getZ()D": "Lnet/minecraft/class_1297;method_23321()D"
+    },
+    "me/lntricate/intricarpet/mixins/interactions/ChunkMapMixin": {
+      "skipPlayer": "method_18722"
+    },
+    "me/lntricate/intricarpet/mixins/interactions/EntityMixin": {
+      "Lnet/minecraft/world/level/block/Block;fallOn(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/entity/Entity;F)V": "Lnet/minecraft/class_2248;method_9554(Lnet/minecraft/class_1937;Lnet/minecraft/class_2680;Lnet/minecraft/class_2338;Lnet/minecraft/class_1297;F)V",
+      "checkFallDamage": "method_5623",
+      "checkInsideBlocks": "method_5852",
+      "isIgnoringBlockTriggers": "method_5696",
+      "teleportToWithTicket": "method_20620"
+    },
+    "me/lntricate/intricarpet/mixins/interactions/EntitySelectorMixin": {
+      "pushableBy": "method_5911"
+    },
+    "me/lntricate/intricarpet/mixins/interactions/NaturalSpawnerMixin": {
+      "Lnet/minecraft/server/level/ServerLevel;getNearestPlayer(DDDDZ)Lnet/minecraft/world/entity/player/Player;": "Lnet/minecraft/class_3218;method_18459(DDDDZ)Lnet/minecraft/class_1657;",
+      "Lnet/minecraft/world/level/NaturalSpawner;spawnCategoryForPosition(Lnet/minecraft/world/entity/MobCategory;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkAccess;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/NaturalSpawner$SpawnPredicate;Lnet/minecraft/world/level/NaturalSpawner$AfterSpawnCallback;)V": "Lnet/minecraft/class_1948;method_24930(Lnet/minecraft/class_1311;Lnet/minecraft/class_3218;Lnet/minecraft/class_2791;Lnet/minecraft/class_2338;Lnet/minecraft/class_1948$class_5261;Lnet/minecraft/class_1948$class_5259;)V",
+      "spawnForChunk(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/NaturalSpawner$SpawnState;ZZZ)V": "method_27821(Lnet/minecraft/class_3218;Lnet/minecraft/class_2818;Lnet/minecraft/class_1948$class_5262;ZZZ)V"
+    },
+    "me/lntricate/intricarpet/mixins/interactions/ProjectileMixin": {
+      "canHitEntity": "method_26958"
+    },
+    "me/lntricate/intricarpet/mixins/interactions/ServerGamePacketListenerImplMixin": {
+      "Lnet/minecraft/server/level/ServerPlayerGameMode;handleBlockBreakAction(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/protocol/game/ServerboundPlayerActionPacket$Action;Lnet/minecraft/core/Direction;I)V": "Lnet/minecraft/class_3225;method_14263(Lnet/minecraft/class_2338;Lnet/minecraft/class_2846$class_2847;Lnet/minecraft/class_2350;I)V",
+      "Lnet/minecraft/server/level/ServerPlayerGameMode;useItem(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;": "Lnet/minecraft/class_3225;method_14256(Lnet/minecraft/class_3222;Lnet/minecraft/class_1937;Lnet/minecraft/class_1799;Lnet/minecraft/class_1268;)Lnet/minecraft/class_1269;",
+      "Lnet/minecraft/server/level/ServerPlayerGameMode;useItemOn(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/phys/BlockHitResult;)Lnet/minecraft/world/InteractionResult;": "Lnet/minecraft/class_3225;method_14262(Lnet/minecraft/class_3222;Lnet/minecraft/class_1937;Lnet/minecraft/class_1799;Lnet/minecraft/class_1268;Lnet/minecraft/class_3965;)Lnet/minecraft/class_1269;",
+      "handlePlayerAction": "method_12066",
+      "handleUseItem": "method_12065",
+      "handleUseItemOn": "method_12046"
+    },
+    "me/lntricate/intricarpet/mixins/interactions/ServerLevelMixin": {
+      "tickChunk(Lnet/minecraft/world/level/chunk/LevelChunk;I)V": "method_18203(Lnet/minecraft/class_2818;I)V"
+    },
+    "me/lntricate/intricarpet/mixins/logger/ServerLevelMixin": {
+      "Lnet/minecraft/world/level/entity/PersistentEntitySectionManager;tick()V": "Lnet/minecraft/class_5579;method_31809()V",
+      "tick": "method_18765"
+    }
+  }
+}
