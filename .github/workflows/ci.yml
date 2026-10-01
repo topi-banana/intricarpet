@@ -27,15 +27,12 @@ env:
   # Pinning it here rather than per job is what keeps the whole matrix on one toolchain; the
   # `jals` job below turns it into the commit the tool cache is actually keyed on.
   #
-  # TODO(jals#305): a pull-request branch rather than `main`, and deliberately — the `test` job
-  # below needs two fixes that live in the tool rather than in the harness it runs. `jals-frontend`
-  # generates the test harness in the default package, and a classpath carrying a class named `com`
-  # (33 of the 43 releases map one) turned `com.example.mctest.…` into `cannot find symbol:
-  # variable example`; `jals-classpath` dropped `Multi-Release` when it merged the 1.17 bundler, so
-  # log4j loaded its Java 8 body and died before a frame of the game. On `main` this job cannot
-  # work. When #305 merges this goes back to `main` and rejoins `release.yml`, which is untouched
-  # here because a release publishes jars and runs no tests.
-  JALS_VERSION: feat/multi-release-client-harness
+  # `main`, the same ref `release.yml` builds releases from, now that jals#305 has landed
+  # there. That is the two fixes the `test` job below needs — `jals-frontend` generating the
+  # harness in the default package rather than a `com` package, and `jals-classpath` keeping
+  # `Multi-Release` when it merges the 1.17 bundler — both in the tool rather than in the
+  # harness it runs.
+  JALS_VERSION: main
 
 jobs:
   jals:

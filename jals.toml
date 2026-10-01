@@ -150,11 +150,8 @@ classes-dir = "target/test-classes"
 #
 # `jals build` is untouched by all of it: it never resolves a `[dev-dependencies]` entry.
 [dev-dependencies]
-# TODO(jals#305): `branch` points at the pull request that adds the harness. Once it merges this
-# goes back to `branch = "main"`, the way `[dependencies] minecraft` above already is — and
-# `JALS_VERSION` in both workflows goes with it, because the harness needs two fixes that live in
-# the tool rather than in the example (`jals-frontend`'s shim imports and `jals-classpath`'s
-# `Multi-Release` merge).
+# No `branch`: jals#305, the pull request that added the harness, has landed on the default
+# branch, which is the `main` both workflows' `JALS_VERSION` names.
 mc-client-test = { git = "https://github.com/topi-banana/jals", branch = "feat/multi-release-client-harness", dir = "examples/minecraft_client_test" }
 
 [build]
