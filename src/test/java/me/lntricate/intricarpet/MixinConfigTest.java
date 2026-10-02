@@ -21,7 +21,7 @@ import java.util.stream.Stream;
  * no fewer.
  *
  * <p>It is the one thing about this mod that nothing else checks, and both directions of getting it
- * wrong are silent until they are not. `build.rhai` builds that list by hand, and the source
+ * wrong are silent until they are not. `build.java` builds that list by hand, and the source
  * decides which classes exist by `#[cfg]`; two places reading one boundary. Name a class the
  * selection blanked and Mixin refuses the whole configuration at load — the mod does not start, on
  * a jar that `jals build`, `check-remap.py` and `regenerate.py --check` all passed. Forget to name
@@ -51,7 +51,7 @@ public final class MixinConfigTest {
     private static final String MIXIN_PACKAGE = "me/lntricate/intricarpet/mixins";
 
     /**
-     * Where `build.rhai` renders the configuration, relative to the project root — which is the
+     * Where `build.java` renders the configuration, relative to the project root — which is the
      * working directory of a `jals test` JVM.
      *
      * <p>Named as a path because a resource root is a packaging input: `[build] resource-dirs`
@@ -60,7 +60,7 @@ public final class MixinConfigTest {
      * quietly checking nothing.
      */
     private static final String RENDERED_CONFIG =
-        "target/jals/build/rhai/out/resources/intricarpet.mixins.json";
+        "target/jals/build/script/out/resources/intricarpet.mixins.json";
 
     private MixinConfigTest() {}
 
@@ -86,13 +86,13 @@ public final class MixinConfigTest {
                 + ". Either the classes directory still holds"
                 + " classes from a previous `--features` selection — `jals test` does not clear it"
                 + " when the selection changes, so a type this selection blanks survives from the"
-                + " last one; `jals clean` settles it — or `build.rhai` really did forget them, in"
+                + " last one; `jals clean` settles it — or `build.java` really did forget them, in"
                 + " which case they are compiled, packaged and silently never applied.";
     }
 
     /**
-     * `ChunkMapAccessor` is `#[cfg(feature = "since-1.21.5")]` in the source and a `build.feature`
-     * branch in `build.rhai`. The test above would catch the two disagreeing; this one says which
+     * `ChunkMapAccessor` is `#[cfg(feature = "since-1.21.5")]` in the source and a `Build.feature`
+     * branch in `build.java`. The test above would catch the two disagreeing; this one says which
      * answer is right, so a run that agreed on the wrong one is still red.
      */
     #[test]
@@ -137,7 +137,7 @@ public final class MixinConfigTest {
      * relative to the configuration's own `package`.
      *
      * <p>Read off the classpath rather than from a list, because a list here would be a third copy
-     * of the one in `build.rhai` and the source's own `#[cfg]`s — and the copy that goes stale
+     * of the one in `build.java` and the source's own `#[cfg]`s — and the copy that goes stale
      * silently is the one whose omissions nothing can see.
      */
     private static Set<String> compiledMixins() throws Exception {

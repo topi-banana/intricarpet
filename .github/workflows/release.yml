@@ -65,7 +65,7 @@ jobs:
 
   build:
     # The same fifteen cells as `ci.yml`, built as releases: `JALS_BUILD_RELEASE` drops the
-    # `-SNAPSHOT`/`+build.N` suffix `build.rhai` otherwise puts in `fabric.mod.json`.
+    # `-SNAPSHOT`/`+build.N` suffix `build.java` otherwise puts in `fabric.mod.json`.
     #
     # Every cell produces a jar, so every cell uploads one and a failure anywhere fails the release.
     needs: [jals, refmaps]
@@ -75,7 +75,7 @@ jobs:
       fail-fast: false
       matrix:
         # The same two columns as `ci.yml`, for the same reason: `java` is the JDK the cell
-        # installs, one step at or above the `--release` `build.rhai` derives for that Minecraft
+        # installs, one step at or above the `--release` `build.java` derives for that Minecraft
         # version. A release published from here is compiled by a JDK of its own era.
         include:
           - minecraft: "1.17.1"

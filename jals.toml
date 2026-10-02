@@ -6,7 +6,7 @@
 #     jals build --features 1.21.11
 #     jals lint  --features 1.21.11
 #
-# Exactly one version feature must be selected; `build.rhai` rejects zero and rejects two, because
+# Exactly one version feature must be selected; `build.java` rejects zero and rejects two, because
 # feature resolution is additive (Cargo's model) and cannot express exclusivity on its own.
 
 [package]
@@ -44,7 +44,7 @@ features = ["attributes"]
 # is routed by whichever version feature the command line named — every row below carries a
 # `mc-client-test/<release>` beside its `minecraft/<release>`. What this name selects is this
 # project's own test sources, which are `#[cfg]`-gated on it whole, and the JVM argument
-# `build.rhai` writes for them. A selection that omits it compiles and lints as if `src/test/java`
+# `build.java` writes for them. A selection that omits it compiles and lints as if `src/test/java`
 # were not there, which is what keeps the fifteen build and lint cells unchanged.
 #
 # `minecraft/client` is routed from here as well as from the harness's own edge, and that is not
@@ -159,12 +159,12 @@ mc-client-test = { git = "https://github.com/topi-banana/jals", dir = "examples/
 script = { type = "java", file = "build.java" }
 source-dirs = ["src/main/java"]
 # Two roots. `src/main/resources` is what is authored — today only the mod icon. The second is
-# where `build.rhai` writes the two resources that used to be Gradle `processResources` filters:
+# where `build.java` writes the two resources that used to be Gradle `processResources` filters:
 # `fabric.mod.json` (the mod id, name, version and the release's dependency ranges) and
 # `intricarpet.mixins.json` (the Mixin compatibility level, and whether `ChunkMapAccessor` exists in
 # this selection at all). Templating them in the build script rather than in the build *tool* is
 # what let the tool go.
-resource-dirs = ["src/main/resources", "target/jals/build/rhai/out/resources"]
+resource-dirs = ["src/main/resources", "target/jals/build/script/out/resources"]
 # Package the compiled classes and both resource roots into a jar, rewriting the classes into the
 # names Fabric loads a mod through on the way. `with` names one `[mappings]` key — the same one
 # `[dependencies] remap` reads, because one file describes both renamings and the two steps read it

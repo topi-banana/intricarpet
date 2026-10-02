@@ -86,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # `java` is the JDK the cell installs; it is *not* the `--release` `build.rhai` passes.
+        # `java` is the JDK the cell installs; it is *not* the `--release` `build.java` passes.
         # `javac` accepts any `--release` up to its own version, so a JDK covers every release at or
         # below it and these fifteen cells need three JDKs rather than four: 1.17.1 asks for
         # `--release 16` and gets it from JDK 17, which keeps CI off an end-of-life Temurin. Both
@@ -226,7 +226,7 @@ jobs:
         # `java` here is a *third* number, and not the `java` column the `build` job carries: it is
         # the JVM the release has to **boot** on, from the harness's own era table. `javac` is a
         # separate axis and is one JDK 25 for every cell — it only has to read the game's class
-        # files and accept the `--release` `build.rhai` derives, and a current one does both for all
+        # files and accept the `--release` `build.java` derives, and a current one does both for all
         # fifteen.
         #
         # 1.17.1 is where this job and `build` disagree, and the disagreement is deliberate. `build`

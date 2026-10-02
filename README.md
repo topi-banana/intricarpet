@@ -46,7 +46,7 @@ python3 mappings/regenerate.py --check
 
 `jals build` shells out to `javac`, and *which* `javac` is the ordinary system resolution — `$JAVAC`,
 then `$JAVA_HOME/bin`, then `PATH`. The JDK has to be at least the release the selection compiles at
-(`--release 16` for 1.17.1 through `--release 25` for 26.x, derived in `build.rhai`), and may be
+(`--release 16` for 1.17.1 through `--release 25` for 26.x, derived in `build.java`), and may be
 newer: one JDK 25 builds all fifteen. CI installs one per era instead — 17, 21 or 25, chosen by the
 cell — so a release is compiled by a JDK no newer than it has to be. Three rather than four, because
 `--release 16` needs a JDK 16 no more than it needs a JDK 25, and 17 keeps CI off an end-of-life
@@ -95,7 +95,7 @@ Three things are checked, and they are worth separating by what they can see:
 
 - **`MixinConfigTest`** — `intricarpet.mixins.json` names exactly the mixin classes the selection
   compiled. Nothing else checks this, and both ways of getting it wrong are silent until they are
-  not: `build.rhai` writes that list by hand while the source decides by `#[cfg]` which classes
+  not: `build.java` writes that list by hand while the source decides by `#[cfg]` which classes
   exist, so naming a blanked class makes Mixin refuse the whole configuration at load — the mod does
   not start, on a jar that `jals build`, `check-remap.py` and `regenerate.py --check` all passed —
   and forgetting to name one applies nothing and says nothing.
@@ -118,7 +118,7 @@ jals test --features 1.17.1     # blanks it — and the class file from the run 
 
 The second run fails `MixinConfigTest`, and the failure is *correct*: the accessor really was on that
 JVM's classpath, for every test in the run and not only this one. What the test cannot tell you is
-which of the two causes it is — a stale directory, or a `build.rhai` that genuinely forgot a mixin —
+which of the two causes it is — a stale directory, or a `build.java` that genuinely forgot a mixin —
 so it names both, and `jals clean` is what settles it.
 
 It reaches `jals build` too, where it is worth more than a red test: a local `jals build --features
@@ -226,7 +226,7 @@ package-private call — is a Mixin `@Invoker` accessor
 | Gradle / Loom                                    | now                                                                    |
 | ------------------------------------------------ | ---------------------------------------------------------------------- |
 | `preprocess { … }`, `//#if`, `//$$`               | `#[cfg(...)]` over `[features]` in `jals.toml`                          |
-| `versions/*/gradle.properties`                    | the catalog in `build.rhai`                                             |
+| `versions/*/gradle.properties`                    | the catalog in `build.java`                                             |
 | `versions/mapping-1.18.2-1.19.2.txt`              | nothing — the source uses `Component`                                   |
 | `versions/*/intricarpet.accesswidener`            | `ChunkMapAccessor`, a Mixin `@Invoker`                                  |
 | Loom: fetch / bundler / remap / Mixin classpath   | `[dependencies] minecraft`, jals' Minecraft SDK                         |
@@ -234,8 +234,8 @@ package-private call — is a Mixin `@Invoker` accessor
 | Loom remapping Carpet to the project's namespace  | `[dependencies] remap` over `mappings/intermediary-*.tiny`              |
 | `remapJar`, the intermediary-named output         | `[build] remap`, the same files read the other way round                |
 | The Mixin annotation processor's refmap           | `mappings/refmap-*.json`, derived from those same files                 |
-| `processResources { expand … }`                   | `templates/*.json` rendered by `build.rhai`                             |
-| `JavaCompile { options … }`, `sourceCompatibility`| `build.add_javac_arg` in `build.rhai`                                   |
+| `processResources { expand … }`                   | `templates/*.json` rendered by `build.java`                             |
+| `JavaCompile { options … }`, `sourceCompatibility`| `Build.addJavacArg` in `build.java`                                     |
 | `buildAndGather`, the matrix workflows            | one `--features` matrix in `.github/workflows/ci.yml`                   |
 
 ### Three namespaces, one mapping file per release
@@ -294,7 +294,7 @@ references, and each needs its own answer.
 `String`s, which a remapper has no business rewriting. Mixin resolves them when it applies the mixin,
 against a game that has never heard of `checkFallDamage`. Its own answer is a **refmap**: a side
 table from the string as written to the string as it should be read. `mappings/regenerate.py`
-generates one per release beside the mapping set it derives it from, and `build.rhai` names it in
+generates one per release beside the mapping set it derives it from, and `build.java` names it in
 `intricarpet.mixins.json` on the thirteen obfuscated releases — and leaves the key out on 26.x, where
 the source's names already are the runtime's.
 
