@@ -36,13 +36,15 @@ cargo install --git https://github.com/topi-banana/jals jals-cli
 jals build --features 26.2          # -> target/jals/remap/intricarpet-2.0.7.jar
 jals lint  --features 26.2
 jals fmt $(git ls-files -- '*.java')  # no --features: one answer for the whole tree
-
-# On the thirteen obfuscated releases, assert the jar carries the names Fabric loads it through.
-python3 mappings/check-remap.py 1.21.11 target/jals/remap/intricarpet-2.0.7.jar
-
-# And that the refmaps still say what the source does — no network, no toolchain, all thirteen.
-python3 mappings/regenerate.py --check
 ```
+
+There is no `mappings/` directory and nothing mapping-shaped to regenerate or check by hand: on the
+thirteen obfuscated releases the build *derives* the mapping table and the refmap itself, from the
+digests `build.java` pins and the mixin sources it scans — see [Three namespaces, one mapping file
+per release](#three-namespaces-one-mapping-file-per-release). The first build of a release fetches
+Mojang's and Fabric's mapping halves (~13 MB); every build after that answers from the cache,
+including offline ones. `jals lint` runs no build script, so on a checkout that has never built,
+it degrades to a world without the deobfuscated Carpet jar — one `jals build` fixes that.
 
 `jals build` shells out to `javac`, and *which* `javac` is the ordinary system resolution — `$JAVAC`,
 then `$JAVA_HOME/bin`, then `PATH`. The JDK has to be at least the release the selection compiles at
@@ -97,8 +99,8 @@ Three things are checked, and they are worth separating by what they can see:
   compiled. Nothing else checks this, and both ways of getting it wrong are silent until they are
   not: `build.java` writes that list by hand while the source decides by `#[cfg]` which classes
   exist, so naming a blanked class makes Mixin refuse the whole configuration at load — the mod does
-  not start, on a jar that `jals build`, `check-remap.py` and `regenerate.py --check` all passed —
-  and forgetting to name one applies nothing and says nothing.
+  not start, on a jar that `jals build` passed, whose tasks resolved every selector and `@Shadow`
+  against the composed table — and forgetting to name one applies nothing and says nothing.
 - **`InteractionTest`** — `Interaction`, the one part of this mod that names no Minecraft and no
   Carpet type, and the state `/interaction` reads and every interaction mixin writes through.
 - **`ClientTest`** — boots a real client of the selected release, opens a world in it, and asserts
@@ -231,9 +233,10 @@ package-private call — is a Mixin `@Invoker` accessor
 | `versions/*/intricarpet.accesswidener`            | `ChunkMapAccessor`, a Mixin `@Invoker`                                  |
 | Loom: fetch / bundler / remap / Mixin classpath   | `[dependencies] minecraft`, jals' Minecraft SDK                         |
 | `modImplementation` Carpet, `fabric-loader`       | `[dependencies]`, one optional Carpet jar per release                   |
-| Loom remapping Carpet to the project's namespace  | `[dependencies] remap` over `mappings/intermediary-*.tiny`              |
-| `remapJar`, the intermediary-named output         | `[build] remap`, the same files read the other way round                |
-| The Mixin annotation processor's refmap           | `mappings/refmap-*.json`, derived from those same files                 |
+| Loom remapping Carpet to the project's namespace  | `[dependencies] remap` over the table the task chain composes           |
+| `remapJar`, the intermediary-named output         | `[build] remap`, the same table read the other way round                |
+| Loom's layered-mapping composition                | `Tasks.composeMappings` over the two published halves                   |
+| The Mixin annotation processor's refmap           | `Tasks.resolveReferences` over the mixin sources, per build             |
 | `processResources { expand … }`                   | `templates/*.json` rendered by `build.java`                             |
 | `JavaCompile { options … }`, `sourceCompatibility`| `Build.addJavacArg` in `build.java`                                     |
 | `buildAndGather`, the matrix workflows            | one `--features` matrix in `.github/workflows/ci.yml`                   |
@@ -262,23 +265,28 @@ in a header, so `format = { type = "tiny-v2", from = "intermediary", to = "mojan
 renaming is meant, and each step reads it the way it needs. A ProGuard-style file could not — it
 names one pair implicitly and is read in whichever direction the step hardcodes.
 
-The files are generated rather than written, by `mappings/regenerate.py`: Fabric's intermediary
-mappings for the release composed with the official mappings Mojang publishes for it. Neither half
-is the whole game — the script's docstring says what it keeps — and neither omission is silent. A
-missing Carpet type stops `javac` on the `class_NNNN` it could not resolve; a missing name of the
-mod's own is what `mappings/check-remap.py` fails CI on, because a remapper leaves what it cannot
-rename and would otherwise ship a jar that builds and dies at the first reference. Adding a release
-means declaring its Carpet jar with `remap = "intermediary"`, adding its `[[mappings.intermediary]]`
-alternative and re-running the script; it reads everything else out of `jals.toml` and Mojang's
-version manifest.
+The files are generated rather than written — and generated *per build*, by the task chain
+`build.java` records, not by a script a maintainer re-runs. Each `file` in `jals.toml` points below
+the script's output root (`target/jals/build/script/out/mappings/…`), where a `Tasks.publishText`
+terminal commits the table during the script phase, before any remap reads one. The chain fetches
+the two published halves — Mojang's `client.txt` for the release, content-addressed by the SHA-1
+`build.java` pins, and Fabric's `intermediary-<release>-v2.jar`, digest-pinned like every other
+fetch — and composes them with `Tasks.composeMappings` into the **whole-game** table: every class
+and member both halves name, joined on the obfuscated identity. A committed file was a reviewed
+file, which is why the old generator filtered the table to what this mod touches; a derived one has
+nothing to review and nothing to go stale, so it keeps the whole game instead — and with it, the
+failure mode the filter had to police is gone: there is no name of client.txt the table can miss.
+
+Adding a release means declaring its Carpet jar with `remap = "intermediary"`, adding its
+`[[mappings.intermediary]]` alternative pointing at the derived path, and adding one catalog row to
+`build.java` with the two digests — the comments there say where each comes from.
 
 The other half of the reobfuscation — a member declared on a supertype, where `[build] remap` finds
 it only if the declaring type is in the class index jals builds from the compile classpath, and the
 game jar arrives there as a build-task artifact rather than as a declared dependency — was jals
 [#251], and it is on `main`. It is named here because it is the reason this repository's
 `JALS_VERSION` cannot go below it: an older jals returns `getUUID` and its like still spelled the way
-the source spells them, which `mappings/check-remap.py` turns into a red build rather than a broken
-jar.
+the source spells them, in a jar that builds and then dies at the first inherited call.
 
 [#251]: https://github.com/topi-banana/jals/pull/251
 
@@ -293,30 +301,29 @@ references, and each needs its own answer.
 "L…;fallOn(…)V")`, `@Invoker("forEachBlockTickingChunk")` — annotation *elements*, which is to say
 `String`s, which a remapper has no business rewriting. Mixin resolves them when it applies the mixin,
 against a game that has never heard of `checkFallDamage`. Its own answer is a **refmap**: a side
-table from the string as written to the string as it should be read. `mappings/regenerate.py`
-generates one per release beside the mapping set it derives it from, and `build.java` names it in
-`intricarpet.mixins.json` on the thirteen obfuscated releases — and leaves the key out on 26.x, where
-the source's names already are the runtime's.
+table from the string as written to the string as it should be read. `build.java` derives one per
+release, per build: it scans the mixin sources — comments and literals blanked, `#[cfg]` predicates
+evaluated against the selection, `remap = false` honored, selector constants folded — and hands
+every Minecraft-owned selector to `Tasks.resolveReferences` over the composed table, which rewrites
+each part in place and *fails the build, listing every line it could not settle*. `Tasks.jsonFromLines`
+assembles the answers into the refmap document and a second `Tasks.publishText` commits it into the
+rendered-resources directory; `intricarpet.mixins.json` names it on the thirteen obfuscated releases
+and leaves the key out on 26.x, where the source's names already are the runtime's.
 
 Loom got its refmap from the Mixin annotation processor. This build does not, and could not: the
 processor on the classpath here is SpongePowered's own, which reads SRG and TSRG and has never heard
 of a tiny file. Loom's tiny support was `fabric-mixin-compile-extensions`, a Loom artifact. Deriving
-the table from the mapping set is both smaller and checkable, which is what `--check` below is.
+the table from the mapping set is both smaller and unfakeable: the refmap is a function of the
+sources and the table, computed after every change to either, so the stale-copy class of bug — the
+one the old `regenerate.py --check` CI job existed to catch — has no build left to hide in.
 
 **`@Shadow`.** Not read out of the annotation at all. `MixinPreProcessorStandard` looks the member up
 by the name the mixin class *declares* and never consults a refmap for it, so the name has to be
-right in the bytecode — which makes this a mapping-set entry rather than a refmap one. The mixin
-class gets an identity class line and a copy of its target's mapping for the member it shadows, and
-`[build] remap` then renames the declaration and every use of it exactly as it renames a Minecraft
-member. `ChunkMapMixin`'s `playerMap` comes out `field_18241`, which is what Loom's remapper did to
-Carpet's own shadows.
-
-`mappings/check-remap.py` sees neither half: it skips annotations whole, and a declaration's own name
-is not a reference for it to check. The cover for both is
-
-```sh
-python3 mappings/regenerate.py --check
-```
-
-which re-derives every refmap from the committed mapping sets and the source tree and fails on a tree
-that has moved on from them. It needs no network, no JDK and no jals, and CI runs it as its own job.
+right in the bytecode — which makes this a mapping-set entry rather than a refmap one. The scan
+collects each active shadow of a Minecraft target as a `mixin<tab>target<tab>member` line, and
+`Tasks.copyMappings` extends the composed table with an identity section for the mixin class
+carrying its target's entry for that member; `[build] remap` then renames the declaration and every
+use of it exactly as it renames a Minecraft member. `ChunkMapMixin`'s `playerMap` comes out
+`field_18241`, which is what Loom's remapper did to Carpet's own shadows. The copy is strict in the
+same direction the refmap resolution is: a shadow of a Minecraft member the table has no entry for
+fails the build, because the alternative is a mixin that loads and then cannot find its own field.

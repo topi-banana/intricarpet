@@ -53,22 +53,18 @@ jobs:
           echo "${JALS_VERSION} -> ${id}"
           echo "id=${id}" >>"$GITHUB_OUTPUT"
 
-  refmaps:
-    # `ci.yml`'s check, repeated here for the reason `check-remap.py` is: a jar built from a stale
-    # refmap compiles, packages and passes every other gate, and fails when Mixin applies it. It
-    # gates the build rather than following it — no toolchain, no network, so it costs a checkout.
-    name: check the refmaps
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - run: python3 mappings/regenerate.py --check
-
   build:
     # The same fifteen cells as `ci.yml`, built as releases: `JALS_BUILD_RELEASE` drops the
     # `-SNAPSHOT`/`+build.N` suffix `build.java` otherwise puts in `fabric.mod.json`.
     #
+    # The refmap check `ci.yml` used to run ahead of this job is inside it now, the way the mapping
+    # table itself is: both are derived from the source tree at build time rather than committed
+    # beside it, so a stale copy — the failure that job existed to catch — is a state this build
+    # cannot be in. A selector or `@Shadow` the composed table cannot answer fails the build task
+    # that resolves it, before a jar exists.
+    #
     # Every cell produces a jar, so every cell uploads one and a failure anywhere fails the release.
-    needs: [jals, refmaps]
+    needs: jals
     name: ${{ matrix.minecraft }}
     runs-on: ubuntu-latest
     strategy:
@@ -129,11 +125,6 @@ jobs:
         env:
           JALS_BUILD_RELEASE: "true"
         run: jals build --features "${{ matrix.minecraft }}"
-      # A remapper leaves what it cannot rename, so an incomplete mapping set produces a jar that
-      # builds and then dies at the first reference. Nothing gets attached to a release without
-      # this passing.
-      - name: Check the jar is intermediary-named
-        run: python3 mappings/check-remap.py "${{ matrix.minecraft }}" target/jals/remap/*.jar
       # The jar `[build] remap` writes is named from `[package]`, so every cell produces the same
       # file name; the Minecraft version goes on here, where the selection is known.
       - name: Name the jar after the release it targets

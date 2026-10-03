@@ -6,7 +6,6 @@ on:
     paths:
       - "src/**"
       - "templates/**"
-      - "mappings/**"
       - "jals.toml"
       - "build.java"
       - ".github/workflows/**"
@@ -158,26 +157,25 @@ jobs:
           version: ${{ env.JALS_VERSION }}
 
       # Fetches the game jar, unwraps the bundler, remaps it with the official mappings, fetches
-      # Carpet and the loader, deobfuscates Carpet on the obfuscated releases (`[dependencies]
-      # remap`, against the generated `mappings/intermediary-*.tiny`), renders the two resource
-      # templates, compiles, packages, and rewrites the packaged classes into intermediary names
-      # with the same mapping set read the other way round.
+      # Carpet and the loader, and — on the thirteen obfuscated releases — derives the mapping
+      # table first: `build.java` records a task chain that fetches Mojang's `client.txt` and
+      # Fabric's intermediary for the release, composes them into the whole-game tiny v2 table
+      # both remap steps read (`[dependencies] remap` deobfuscates Carpet against it, `[build]
+      # remap` reobfuscates the mod through it), extends it with this mod's `@Shadow` entries, and
+      # assembles the refmap from the mixin sources. Then it renders the two resource templates,
+      # compiles and packages.
       #
       # Every cell has to reach a jar. This step carried `continue-on-error` on the thirteen
       # obfuscated releases while Carpet's intermediary-named jar and the Mojang-named game jar
       # could not share a classpath; now that the `remap` above reconciles them, an error here is a
-      # real regression and fails the run.
+      # real regression and fails the run. It is also where the two checks that used to follow this
+      # build now live: the table is the whole game rather than a filtered slice, so a name of it
+      # to miss is a name Mojang never published, and a mixin selector or `@Shadow` the table
+      # cannot answer fails the task that resolves it — inside this step, before a jar exists.
       - name: Build
         env:
           JALS_BUILD_ID: ${{ github.run_number }}
         run: jals build --features "${{ matrix.minecraft }}"
-
-      # The step above cannot fail on an incomplete mapping set: a remapper leaves what it cannot
-      # rename, so a name the set misses produces a jar that builds, uploads and dies at the first
-      # reference. This is the assertion that the jar is actually loadable — see
-      # `mappings/check-remap.py` for what it reads and what it deliberately does not.
-      - name: Check the jar is intermediary-named
-        run: python3 mappings/check-remap.py "${{ matrix.minecraft }}" target/jals/remap/*.jar
 
       - name: Upload the jar
         uses: actions/upload-artifact@v7
@@ -199,7 +197,8 @@ jobs:
     # saying the mod *works* on a release. What they say is narrower and is not said anywhere else:
     # every mixin this selection compiled names a target the release actually has
     # (`MixinTargetsTest`, which needs no client at all — a missing target is a hard load failure
-    # that `jals build`, `check-remap.py` and `regenerate.py --check` all pass), the mod's own
+    # that `jals build`, whose tasks resolve every selector and shadow against the composed table,
+    # still passes), the mod's own
     # release-portable state classes hold against real objects of that release, and the release
     # boots and loads a world at all.
     #
@@ -432,19 +431,3 @@ jobs:
         run: |
           mapfile -t sources < <(git ls-files -- '*.java')
           jals fmt --check "${sources[@]}"
-
-  refmaps:
-    # One job, no matrix and no toolchain: a refmap follows from two things that are both tracked —
-    # the committed mapping set and the source tree — so re-deriving all thirteen is a read of files
-    # in the checkout and nothing else. No jals, no JDK, no network.
-    #
-    # What it catches is the one way a generated file goes wrong between regenerations: a source tree
-    # that has moved on from it. Add an injector, rename a selector, shadow a member with no line to
-    # copy, and the jar still builds and still passes `check-remap.py` — every reference in its
-    # bytecode really is intermediary-named — while Mixin fails to resolve the target at apply time.
-    # That failure has no earlier signal than this job.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Check the refmaps are what the source says
-        run: python3 mappings/regenerate.py --check
