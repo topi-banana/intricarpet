@@ -11,8 +11,8 @@ import java.util.UUID;
  * `/interaction` reads and every interaction mixin writes through, which is why it is worth
  * stating.
  *
- * <p>These carry no `#[cfg]` and want no client: they run in every cell of the matrix. Fifteen
- * identical verdicts is the point — the class compiles into all fifteen releases, and a change that
+ * <p>These carry no `#[cfg]` and want no client: they run in every cell of the matrix. Sixteen
+ * identical verdicts is the point — the class compiles into all sixteen releases, and a change that
  * broke it would break it everywhere at once rather than on the release nobody selected.
  */
 public final class InteractionTest {

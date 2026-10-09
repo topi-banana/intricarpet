@@ -77,7 +77,7 @@ jobs:
 
   build:
     # One cell per supported Minecraft release, which is exactly the `[features]` table in
-    # `jals.toml`. The whole point of the migration is that these fifteen builds are one source
+    # `jals.toml`. The whole point of the migration is that these sixteen builds are one source
     # tree and one manifest: the cell differs only in `--features`.
     needs: jals
     name: ${{ matrix.minecraft }}
@@ -87,7 +87,7 @@ jobs:
       matrix:
         # `java` is the JDK the cell installs; it is *not* the `--release` `build.java` passes.
         # `javac` accepts any `--release` up to its own version, so a JDK covers every release at or
-        # below it and these fifteen cells need three JDKs rather than four: 1.17.1 asks for
+        # below it and these sixteen cells need three JDKs rather than four: 1.17.1 asks for
         # `--release 16` and gets it from JDK 17, which keeps CI off an end-of-life Temurin. Both
         # numbers still have to move together — a release whose `java` is below its `--release`
         # fails with `release version N not supported`, and one whose game jar is newer than its
@@ -122,6 +122,8 @@ jobs:
           - minecraft: "26.1.2"
             java: "25"
           - minecraft: "26.2"
+            java: "25"
+          - minecraft: "26.3"
             java: "25"
     steps:
       - uses: actions/checkout@v7
@@ -185,7 +187,7 @@ jobs:
           if-no-files-found: error
 
   test:
-    # The fifteen releases once more, and the only job here that *runs* Minecraft rather than
+    # The sixteen releases once more, and the only job here that *runs* Minecraft rather than
     # compiling against it. `jals test` resolves the `mc-client-test` harness the manifest names
     # under `[dev-dependencies]`, puts that release's ~60 client runtime libraries on the classpath,
     # and each `#[test]` boots a real client headless, opens a world in it and asserts against the
@@ -226,7 +228,7 @@ jobs:
         # the JVM the release has to **boot** on, from the harness's own era table. `javac` is a
         # separate axis and is one JDK 25 for every cell — it only has to read the game's class
         # files and accept the `--release` `build.java` derives, and a current one does both for all
-        # fifteen.
+        # sixteen.
         #
         # 1.17.1 is where this job and `build` disagree, and the disagreement is deliberate. `build`
         # gives it JDK 17 because `--release 16` compiles fine there and it keeps CI off an
@@ -264,6 +266,8 @@ jobs:
           - minecraft: "26.1.2"
             java: "25"
           - minecraft: "26.2"
+            java: "25"
+          - minecraft: "26.3"
             java: "25"
     steps:
       - uses: actions/checkout@v7
@@ -350,7 +354,7 @@ jobs:
     # could have switched that half off even when one existed.
     #
     # This is what replaced the preprocessor, checked once per release rather than once. It runs
-    # offline against whatever the verified cache holds, which is nothing here: resolving fifteen
+    # offline against whatever the verified cache holds, which is nothing here: resolving sixteen
     # game jars to lint a tree that has already been built by the job above would double the
     # matrix's cost for an answer `javac` gives better. `cannot-resolve` therefore has no classpath
     # to be an authority over and reports what it cannot see; that is a real cost of linting
@@ -377,6 +381,7 @@ jobs:
           - "1.21.11"
           - "26.1.2"
           - "26.2"
+          - "26.3"
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -400,7 +405,7 @@ jobs:
   fmt:
     # One job, not a matrix: `jals fmt` has no `--features`. Formatting is a CST operation over the
     # text as written — every `#[cfg]` branch is live source in every selection, so there is one
-    # answer for the whole tree and fifteen copies of it would be fifteen identical runs.
+    # answer for the whole tree and sixteen copies of it would be sixteen identical runs.
     #
     # The tree is formatted by `jals fmt`'s own defaults, with no `jalsfmt.toml` to override them.
     # That is what makes `JALS_VERSION` the whole specification of this check: it names the rule set

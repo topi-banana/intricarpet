@@ -54,7 +54,7 @@ jobs:
           echo "id=${id}" >>"$GITHUB_OUTPUT"
 
   build:
-    # The same fifteen cells as `ci.yml`, built as releases: `JALS_BUILD_RELEASE` drops the
+    # The same sixteen cells as `ci.yml`, built as releases: `JALS_BUILD_RELEASE` drops the
     # `-SNAPSHOT`/`+build.N` suffix `build.java` otherwise puts in `fabric.mod.json`.
     #
     # The refmap check `ci.yml` used to run ahead of this job is inside it now, the way the mapping
@@ -103,6 +103,8 @@ jobs:
           - minecraft: "26.1.2"
             java: "25"
           - minecraft: "26.2"
+            java: "25"
+          - minecraft: "26.3"
             java: "25"
     steps:
       - uses: actions/checkout@v7

@@ -40,12 +40,12 @@ features = ["attributes"]
 #
 #     jals test --features 1.21.11,client-test -j 1
 #
-# It names no release and cannot: the harness carries all 43 the SDK does, and which one reaches it
+# It names no release and cannot: the harness carries all 44 the SDK does, and which one reaches it
 # is routed by whichever version feature the command line named — every row below carries a
 # `mc-client-test/<release>` beside its `minecraft/<release>`. What this name selects is this
 # project's own test sources, which are `#[cfg]`-gated on it whole, and the JVM argument
 # `build.java` writes for them. A selection that omits it compiles and lints as if `src/test/java`
-# were not there, which is what keeps the fifteen build and lint cells unchanged.
+# were not there, which is what keeps the sixteen build and lint cells unchanged.
 #
 # `minecraft/client` is routed from here as well as from the harness's own edge, and that is not
 # the redundancy it looks like. A dependency node's identity is a string: this project reaches the
@@ -84,6 +84,7 @@ client-test = ["minecraft/client"]
 "1.21.11" = ["since-1.21.6", "minecraft/1.21.11", "mc-client-test/1.21.11", "dep:carpet-1.21.11"]
 "26.1.2" = ["since-26", "minecraft/26.1.2", "mc-client-test/26.1.2", "dep:carpet-26.1.2"]
 "26.2" = ["since-26", "minecraft/26.2", "mc-client-test/26.2", "dep:carpet-26.2"]
+"26.3" = ["since-26", "minecraft/26.3", "mc-client-test/26.3", "dep:carpet-26.3"]
 
 # The Minecraft SDK is jals' own `examples/minecraft`: a source project whose build script fetches
 # the release, unwraps the 1.18+ bundler, remaps it with the official mappings, puts the game jar —
@@ -98,10 +99,11 @@ client-test = ["minecraft/client"]
 minecraft = { git = "https://github.com/topi-banana/jals", branch = "main", dir = "examples/minecraft" }
 fabric-loader = { jar = "https://maven.fabricmc.net/net/fabricmc/fabric-loader/0.18.4/fabric-loader-0.18.4.jar" }
 
-# The source's `@Nullable` is jspecify's. Three of the fifteen releases — 26.2, 26.1.2 and 1.21.11
-# — carry the annotation through the game's own libraries; the other twelve do not, and `javac`
-# needs the type in every selection, so it is pinned here rather than left to whichever releases
-# happen to bundle it. Annotation-only and CLASS-retained: compile classpath, nothing at runtime.
+# The source's `@Nullable` is jspecify's. Four of the sixteen releases — 26.3, 26.2, 26.1.2 and
+# 1.21.11 — carry the annotation through the game's own libraries; the other twelve do not, and
+# `javac` needs the type in every selection, so it is pinned here rather than left to whichever
+# releases happen to bundle it. Annotation-only and CLASS-retained: compile classpath, nothing at
+# runtime.
 jspecify = { jar = "https://repo1.maven.org/maven2/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar" }
 
 "carpet-1.17.1" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/1.17.1-1.4.57+v220119/fabric-carpet-1.17.1-1.4.57+v220119.jar", optional = true, remap = "intermediary" }
@@ -119,6 +121,7 @@ jspecify = { jar = "https://repo1.maven.org/maven2/org/jspecify/jspecify/1.0.0/j
 "carpet-1.21.11" = { jar = "https://jitpack.io/com/github/gnembon/fabric-carpet/1.4.194/fabric-carpet-1.4.194.jar", optional = true, remap = "intermediary" }
 "carpet-26.1.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.1+v260401/fabric-carpet-26.1+v260401.jar", optional = true }
 "carpet-26.2" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.2+v260616/fabric-carpet-26.2+v260616.jar", optional = true }
+"carpet-26.3" = { jar = "https://masa.dy.fi/maven/carpet/fabric-carpet/26.3+v261008/fabric-carpet-26.3+v261008.jar", optional = true }
 
 # `jals test` compiles this tree *in addition to* `[build] source-dirs` and writes the result
 # somewhere else, so `jals build` still packages exactly the classes it packaged before: a `#[test]`
@@ -200,7 +203,7 @@ remap = { with = "intermediary" }
 # At most one alternative may ever be active, which jals enforces statically: two alternatives whose
 # `required-features` are comparable by inclusion are rejected, because some selection would
 # activate both. Each row here names exactly one version, so the thirteen sets are pairwise
-# incomparable — and 26.1 onward names none, which is how those two releases opt out.
+# incomparable — and 26.1 onward names none, which is how those three releases opt out.
 
 [[mappings.intermediary]]
 required-features = ["1.17.1"]

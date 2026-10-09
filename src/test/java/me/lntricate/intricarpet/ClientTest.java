@@ -29,11 +29,11 @@ package me.lntricate.intricarpet;
  * <p>Each `#[test]` runs in its own JVM and boots its own client, which is the shape `jals test`
  * gives and the reason there are two here rather than ten: a boot on a software rasterizer costs
  * the better part of a minute. Run them one at a time — {@code jals test --features
- * 26.2,client-test -j 1} — since two clients at once want two GL contexts and twice the memory, and
+ * 26.3,client-test -j 1} — since two clients at once want two GL contexts and twice the memory, and
  * never with {@code --no-capture}: the harness halts the JVM on its way out, so the sentinel line
  * the runner reads is the only verdict there is.
  *
- * <p>Any of this mod's fifteen releases goes in place of {@code 26.2}; nothing in this file names
+ * <p>Any of this mod's sixteen releases goes in place of {@code 26.3}; nothing in this file names
  * one. The JVM has to be the one the release asks for, though — 16 for 1.17.1, 17 through 1.20.2,
  * 21 through 1.21.11, 25 for 26.x — which is what `$JAVA` says and what the CI matrix installs.
  */

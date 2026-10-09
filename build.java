@@ -19,8 +19,8 @@ public class Build {
         // Mojang's `client.txt` is content-addressed into its own URL
         // (`https://piston-data.mojang.com/v1/objects/<sha1>/client.txt`), so the one digest pins
         // both the address and the bytes, and Fabric's intermediary jar is an immutable Maven
-        // artifact whose digest was computed once, when the row was added. The two 26.x rows carry
-        // empty digests: those releases ship deobfuscated, so there is nothing to compose, no
+        // artifact whose digest was computed once, when the row was added. The three 26.x rows
+        // carry empty digests: those releases ship deobfuscated, so there is nothing to compose, no
         // Carpet jar to deobfuscate and no refmap to write — exactly what their absent
         // `[[mappings.intermediary]]` alternative in `jals.toml` says from the other side.
         //
@@ -30,6 +30,7 @@ public class Build {
         // release), and `sha1sum`/`wc -c` the `intermediary-<version>-v2.jar` from
         // `https://maven.fabricmc.net/net/fabricmc/intermediary/<version>/`.
         String[][] catalog = {
+            {"26.3", ">=26.3 <26.4", ">=26.3", "25", "", "", "", ""},
             {"26.2", ">=26.2 <26.3", ">=26.2", "25", "", "", "", ""},
             {"26.1.2", ">=26.1 <26.2", ">=26.1", "25", "", "", "", ""},
             {

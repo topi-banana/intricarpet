@@ -33,8 +33,8 @@ Minecraft release.
 # Install the toolchain (or use the `Setup jals` action in CI — see .github/workflows/ci.yml)
 cargo install --git https://github.com/topi-banana/jals jals-cli
 
-jals build --features 26.2          # -> target/jals/remap/intricarpet-2.0.7.jar
-jals lint  --features 26.2
+jals build --features 26.3          # -> target/jals/remap/intricarpet-2.0.7.jar
+jals lint  --features 26.3
 jals fmt $(git ls-files -- '*.java')  # no --features: one answer for the whole tree
 ```
 
@@ -49,7 +49,7 @@ it degrades to a world without the deobfuscated Carpet jar — one `jals build` 
 `jals build` shells out to `javac`, and *which* `javac` is the ordinary system resolution — `$JAVAC`,
 then `$JAVA_HOME/bin`, then `PATH`. The JDK has to be at least the release the selection compiles at
 (`--release 16` for 1.17.1 through `--release 25` for 26.x, derived in `build.java`), and may be
-newer: one JDK 25 builds all fifteen. CI installs one per era instead — 17, 21 or 25, chosen by the
+newer: one JDK 25 builds all sixteen. CI installs one per era instead — 17, 21 or 25, chosen by the
 cell — so a release is compiled by a JDK no newer than it has to be. Three rather than four, because
 `--release 16` needs a JDK 16 no more than it needs a JDK 25, and 17 keeps CI off an end-of-life
 Temurin. `$JAVAC` wins over everything else, so overriding the JDK for one build is
@@ -76,7 +76,7 @@ chooses the game jar, the Carpet jar and every conditional branch at once. The s
 are the version features in `jals.toml`:
 
 `1.17.1` `1.18.2` `1.19.2` `1.19.3` `1.19.4` `1.20.1` `1.20.2` `1.21.1` `1.21.4` `1.21.5` `1.21.8`
-`1.21.10` `1.21.11` `26.1.2` `26.2`
+`1.21.10` `1.21.11` `26.1.2` `26.2` `26.3`
 
 ### Testing
 
@@ -87,10 +87,10 @@ drive is a `[dev-dependencies]` entry, which nothing that produces output ever r
 
 ```sh
 # Every release, no client: the two gates below that need only the game jar and Carpet.
-jals test --features 26.2
+jals test --features 26.3
 
 # The same plus the client end-to-end tests. One at a time — each boots its own Minecraft.
-jals test --features 26.2,client-test -j 1 --timeout 1800
+jals test --features 26.3,client-test -j 1 --timeout 1800
 ```
 
 Three things are checked, and they are worth separating by what they can see:
@@ -136,18 +136,18 @@ on one classpath and nothing else — no Fabric loader, no Knot, no Mixin transf
 injects. What the matrix says is narrower than "the mod works on this release", and saying it plainly
 is what keeps a green cell from being read as more than it is.
 
-The client comes from jals' own `examples/minecraft_client_test`, a harness that covers all 43
-releases the SDK carries — this mod's fifteen among them — so nothing under `src/test/java` names a
-release and adding a sixteenth needs no test change. Two JDKs, chosen independently, because the
+The client comes from jals' own `examples/minecraft_client_test`, a harness that covers all 44
+releases the SDK carries — this mod's sixteen among them — so nothing under `src/test/java` names a
+release and adding a seventeenth needs no test change. Two JDKs, chosen independently, because the
 compiler only has to *read* the release's class files while the runtime has to be one the release can
 **boot** on:
 
 | releases           | compiles with (`$JAVAC`) | boots on (`$JAVA`) |
 | ------------------ | ------------------------ | ------------------ |
-| 1.17.1             | 16+ — one JDK 25 does all fifteen | 16        |
+| 1.17.1             | 16+ — one JDK 25 does all sixteen | 16        |
 | 1.18.2 – 1.20.2    |                          | 17                 |
 | 1.21.1 – 1.21.11   |                          | 21                 |
-| 26.1.2, 26.2       |                          | 25                 |
+| 26.1.2, 26.2, 26.3 |                          | 25                 |
 
 ```sh
 JAVAC=$JDK25/bin/javac JAVA=$JDK17/bin/java jals test --features 1.20.1,client-test -j 1
@@ -180,12 +180,12 @@ the SDK's jars already share one with the pinned client libraries — first entr
 duplicated classes are the same class. `jals build` is untouched: it never resolves a
 `[dev-dependencies]` entry.
 
-### How one source tree targets fifteen releases
+### How one source tree targets sixteen releases
 
 It used to be the [ReplayMod preprocessor](https://github.com/Fallen-Breath/preprocessor): the
 source carried `//#if MC >= 11800` comments and lines commented out with `//$$`, and Gradle ran a
 text pass over the tree — plus `versions/mapping-1.18.2-1.19.2.txt`, a source-level *rename* of one
-type — to produce fifteen private copies of the source before compiling any of them.
+type — to produce sixteen private copies of the source before compiling any of them.
 
 Now the source says it directly, in the jals dialect:
 
@@ -245,7 +245,7 @@ package-private call — is a Mixin `@Invoker` accessor
 
 26.1 onward ships deobfuscated: the game jar, Carpet, the mod and the runtime all speak the same
 names, which is why the old Gradle build applied plain `fabric-loom` there and `fabric-loom-remap`
-everywhere else. Nothing below applies to those two releases — they declare no mapping set, and
+everywhere else. Nothing below applies to those three releases — they declare no mapping set, and
 both remap steps are no-ops.
 
 For 1.17.1 through 1.21.11 three namespaces meet, and the build has to reconcile them twice.
