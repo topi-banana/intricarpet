@@ -297,13 +297,22 @@ jobs:
         with:
           version: ${{ env.JALS_VERSION }}
 
-      # `xvfb` supplies the display GLFW opens a window on and `libgl1-mesa-dri` supplies llvmpipe,
-      # the software rasterizer `LIBGL_ALWAYS_SOFTWARE` selects below. Neither is on the runner
-      # image.
+      # `xvfb` supplies the display; `libgl1-mesa-dri` supplies llvmpipe, the software rasterizer
+      # `LIBGL_ALWAYS_SOFTWARE` selects below, with `libglx-mesa0` as the GLX client the GLFW-based
+      # releases open their window through. None of the three is on the runner image.
+      #
+      # `libegl1` and `libegl-mesa0` are for 26.3 and later — the releases that switched their
+      # client from GLFW to SDL3. Their renderer asks for an sRGB-capable framebuffer
+      # (`SDL_GL_FRAMEBUFFER_SRGB_CAPABLE`), and under llvmpipe no GLX config is sRGB-capable —
+      # `glxinfo -v` prints `sRGB=N` for every one of them — so SDL's GLX path dies in visual
+      # selection with "Couldn't find matching GLX visual" before any context exists. EGL picks its
+      # config by colorspace instead of that attribute and does have an sRGB answer, which is why
+      # `SDL_VIDEO_FORCE_EGL` in the Test step below routes SDL there. SDL prefers GLX even when
+      # EGL is present, so both halves — the libraries and the hint — are load-bearing.
       - name: Install a headless OpenGL stack
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri libglx-mesa0
+          sudo apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri libglx-mesa0 libegl1 libegl-mesa0
 
       # `-j 1`, because each `#[test]` boots its own client and two at once want two GL contexts and
       # twice the memory. `--timeout` is the outer bound and sits *above* the harness's own: `jals
@@ -315,6 +324,8 @@ jobs:
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
           GALLIUM_DRIVER: llvmpipe
+          # Read by none but the SDL3-based releases; see the install step above.
+          SDL_VIDEO_FORCE_EGL: "1"
         run: |
           set -euo pipefail
           compile_home="JAVA_HOME_25_X64"

@@ -157,8 +157,10 @@ Three constraints come from the harness rather than from this mod: run with `-j 
 boots its own client and two at once want two GL contexts and twice the memory; never with
 `--no-capture`, because the harness halts the JVM on its way out with status `0` and the captured
 sentinel line is the only verdict there is; and Linux only, because GLFW wants the main thread on
-macOS and the main thread belongs to the test. CI supplies the display with `xvfb` and the rasterizer
-with Mesa's llvmpipe.
+macOS and the main thread belongs to the test. CI supplies the display with `xvfb`, the rasterizer
+with Mesa's llvmpipe, and — for 26.3 onward, whose SDL3 client asks for an sRGB-capable framebuffer
+no llvmpipe GLX config offers — Mesa's EGL with `SDL_VIDEO_FORCE_EGL`, which the GLFW-based releases
+ignore.
 
 **Two SDK nodes, which is what a Git dependency costs here.** A dependency node's identity is a
 string. This project reaches the Minecraft SDK over Git
